@@ -10,44 +10,41 @@
 *{box-sizing:border-box;font-family:'Orbitron',sans-serif}
 body{margin:0;background:#000;overflow:hidden;color:#fff}
 
-/* SPACE BACKGROUND */
-#space{position:fixed;inset:0;background:#000;overflow:hidden}
+/* SPACE */
+#space{position:fixed;inset:0}
 .star{position:absolute;width:2px;height:2px;background:#fff;animation:move 6s linear infinite}
 @keyframes move{from{transform:translateY(-100vh)}to{transform:translateY(100vh)}}
 
 /* TOP BAR */
 #topBar{
 position:absolute;top:10px;left:10px;right:10px;
-display:flex;justify-content:space-between;align-items:center;z-index:10
+display:flex;justify-content:space-between;align-items:center;
+z-index:10;display:none
 }
-#profile{display:flex;align-items:center;gap:10px;cursor:pointer}
+#profile{display:flex;align-items:center;gap:10px}
 #profile img{width:40px;height:40px;border-radius:8px;border:2px solid cyan}
-#scoreBox{background:#111;padding:8px 16px;border-radius:12px}
-#hpBox{background:#300;padding:8px 16px;border-radius:12px;color:red}
+#scoreBox,#hpBox{background:#111;padding:8px 14px;border-radius:12px}
+#hpBox{color:red}
 
 /* BUTTONS */
-.btn{
-padding:14px 22px;border-radius:14px;border:none;color:#fff;
-background:linear-gradient(135deg,#00f,#0ff);font-size:16px
-}
+.btn{padding:14px 22px;border-radius:14px;border:none;color:#fff;
+background:linear-gradient(135deg,#00f,#0ff)}
 .gold{background:linear-gradient(135deg,#b8860b,#ffd700)}
 .emerald{background:linear-gradient(135deg,#006400,#00ff7f)}
 .diamond{background:linear-gradient(135deg,#5f9ea0,#00ffff)}
 
 #menuBtns{
-position:absolute;bottom:30px;right:20px;display:flex;gap:12px;z-index:10
+position:absolute;bottom:30px;right:20px;
+display:flex;gap:12px;z-index:10
 }
 
 .overlay{
 position:absolute;inset:0;display:none;
-justify-content:center;align-items:center;flex-direction:column;
-background:rgba(0,0,0,.85);z-index:20
+justify-content:center;align-items:center;
+flex-direction:column;background:rgba(0,0,0,.85);z-index:20
 }
 
 canvas{display:none}
-
-/* DEFEAT */
-#defeat h1{color:red;font-size:40px}
 </style>
 </head>
 
@@ -56,8 +53,8 @@ canvas{display:none}
 <div id="space"></div>
 
 <div id="topBar">
-  <div id="profile" onclick="openProfile()">
-    <img id="pfp" src="">
+  <div id="profile">
+    <img id="pfp">
     <span id="pname">PLAYER</span>
   </div>
   <div id="hpBox">HP: <span id="hp">100</span></div>
@@ -82,26 +79,19 @@ canvas{display:none}
 <!-- SETTINGS -->
 <div class="overlay" id="settingsUI">
   <h2>SETTINGS</h2>
-  <div>SOUND <button class="btn">ON / OFF</button></div>
-  <div>EFFECTS <button class="btn">ON / OFF</button></div>
-  <div>FPS 
-    <button class="btn">30</button>
-    <button class="btn">60</button>
-  </div>
   <button class="btn" onclick="closeAll()">BACK</button>
 </div>
 
 <!-- SHOP -->
 <div class="overlay" id="shopUI">
-  <h1>SOON...</h1>
+  <h2>SOON...</h2>
   <button class="btn" onclick="closeAll()">BACK</button>
 </div>
 
 <!-- DEFEAT -->
 <div class="overlay" id="defeat">
-  <h1>DEFEAT ☠</h1>
+  <h1 style="color:red">DEFEAT ☠</h1>
   <p>SCORE: <span id="finalScore">0</span></p>
-  <button class="btn" onclick="startGame()">RESTART</button>
   <button class="btn" onclick="location.reload()">MAIN MENU</button>
 </div>
 
@@ -113,8 +103,9 @@ for(let i=0;i<80;i++){
  let s=document.createElement("div");
  s.className="star";
  s.style.left=Math.random()*100+"%";
+ s.style.top=Math.random()*100+"%";
  s.style.animationDelay=Math.random()*6+"s";
- document.getElementById("space").appendChild(s);
+ space.appendChild(s);
 }
 
 /* STORAGE */
@@ -125,9 +116,8 @@ score.innerText=data.score;
 
 /* UI */
 function closeAll(){document.querySelectorAll('.overlay').forEach(o=>o.style.display="none")}
-function openProfile(){closeAll();profileUI.style.display="flex"}
-function openSettings(){closeAll();settingsUI.style.display="flex"}
 function openShop(){closeAll();shopUI.style.display="flex"}
+function openSettings(){closeAll();settingsUI.style.display="flex"}
 
 /* PROFILE */
 function saveProfile(){
@@ -142,40 +132,51 @@ function setPFP(i){
 }
 
 /* GAME */
-let c=document.getElementById("game"),ctx=c.getContext("2d");
+const c=document.getElementById("game");
+const ctx=c.getContext("2d");
 let x,y,bullets=[],zombies=[],poisons=[];
-let playerHP=100,fireLevel=1;
+let hpVal=100,fireLevel=1;
+let running=false,spawnTimer;
 
 function startGame(){
+ if(running) return;
+ running=true;
+
  closeAll();
  menuBtns.style.display="none";
  topBar.style.display="flex";
+
  c.style.display="block";
- c.width=innerWidth;c.height=innerHeight;
- x=c.width/2;y=c.height-80;
+ c.width=innerWidth;
+ c.height=innerHeight;
+
+ x=c.width/2;
+ y=c.height-80;
+
  bullets=[];zombies=[];poisons=[];
- playerHP=100;fireLevel=1;
- hp.innerText=playerHP;
- loop();
- spawn();
+ hpVal=100;hp.innerText=hpVal;
+
+ spawnTimer=setInterval(spawnZombie,1000);
+ requestAnimationFrame(loop);
 }
 
+c.addEventListener("mousemove",e=>x=e.clientX);
 c.addEventListener("touchmove",e=>x=e.touches[0].clientX);
 
 setInterval(()=>{
- for(let i=0;i<fireLevel;i++){
+ if(!running) return;
+ for(let i=0;i<fireLevel;i++)
   bullets.push({x:x+i*6-fireLevel*3,y:y});
- }
-},200);
+},250);
 
-function spawn(){
- setInterval(()=>{
-  zombies.push({x:Math.random()*c.width,y:-20,s:3,hp:50,t:0});
- },1000);
+function spawnZombie(){
+ zombies.push({x:Math.random()*c.width,y:-20,s:3,hp:50,t:0});
 }
 
 function loop(){
+ if(!running) return;
  ctx.clearRect(0,0,c.width,c.height);
+
  ctx.fillStyle="cyan";
  ctx.fillRect(x-10,y-20,20,20);
 
@@ -187,15 +188,9 @@ function loop(){
  });
 
  zombies.forEach((z,zi)=>{
-  z.y+=z.s;
-  z.t++;
+  z.y+=z.s;z.t++;
   ctx.fillStyle="green";
   ctx.fillRect(z.x,z.y,14,14);
-
-  if(z.t>120){
-   poisons.push({x:z.x,y:z.y});
-   z.t=0;
-  }
 
   bullets.forEach((b,bi)=>{
    if(Math.abs(b.x-z.x)<10 && Math.abs(b.y-z.y)<10){
@@ -205,10 +200,15 @@ function loop(){
      zombies.splice(zi,1);
      data.score+=10;
      score.innerText=data.score;
-     if(Math.random()<0.15 && fireLevel<5) fireLevel++;
+     if(Math.random()<0.12 && fireLevel<5) fireLevel++;
     }
    }
   });
+
+  if(z.t>140){
+   poisons.push({x:z.x,y:z.y});
+   z.t=0;
+  }
  });
 
  poisons.forEach((p,pi)=>{
@@ -216,10 +216,10 @@ function loop(){
   ctx.fillStyle="lime";
   ctx.fillRect(p.x,p.y,6,6);
   if(Math.abs(p.x-x)<12 && Math.abs(p.y-y)<12){
-   playerHP-=30;
-   hp.innerText=playerHP;
+   hpVal-=30;
+   hp.innerText=hpVal;
    poisons.splice(pi,1);
-   if(playerHP<=0) endGame();
+   if(hpVal<=0) endGame();
   }
  });
 
@@ -227,6 +227,8 @@ function loop(){
 }
 
 function endGame(){
+ running=false;
+ clearInterval(spawnTimer);
  finalScore.innerText=data.score;
  localStorage.setItem("ZB",JSON.stringify(data));
  defeat.style.display="flex";
