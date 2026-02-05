@@ -6,41 +6,66 @@
 <title>Zombie BiTz</title>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Press+Start+2P&display=swap');
 
 body{margin:0;overflow:hidden;background:#000;font-family:'Orbitron',sans-serif;color:#fff}
 
-#overlay,#gameOverOverlay{
+#menu{
  position:absolute;inset:0;display:flex;
- flex-direction:column;justify-content:center;align-items:center;
- background:#000;z-index:10
-}
-#gameOverOverlay{display:none;background:rgba(0,0,0,.9)}
-
-button{
- padding:14px 40px;font-size:18px;
- background:#222;color:#fff;border:none;border-radius:12px
+ flex-direction:column;justify-content:center;align-items:center;z-index:10
 }
 
 #topBar{
- position:absolute;top:10px;left:10px;z-index:5;
- font-size:18px
+ position:absolute;top:15px;left:15px;right:15px;
+ display:flex;justify-content:space-between;align-items:center
 }
 
-canvas{display:block}
+#profile{display:flex;align-items:center;gap:10px}
+#profile img{width:40px;height:40px;border-radius:8px;border:2px solid cyan}
+
+#stats{display:flex;gap:15px}
+#scoreBox{background:#111;padding:8px 14px;border-radius:10px}
+#hpBox{background:#300;padding:8px 14px;border-radius:10px;color:red}
+
+#title{
+ font-family:'Press Start 2P',cursive;
+ font-size:2.4em;margin-bottom:30px
+}
+
+#playBtn{
+ font-size:1.2em;padding:14px 50px;
+ border:none;border-radius:16px;background:#333;color:#fff
+}
+
+canvas{display:none}
+
+#gameOver{
+ position:absolute;inset:0;display:none;
+ justify-content:center;align-items:center;
+ flex-direction:column;background:rgba(0,0,0,.9);z-index:20
+}
 </style>
 </head>
 
 <body>
 
-<div id="topBar">SCORE: <span id="score">0</span></div>
+<div id="menu">
+ <div id="topBar">
+  <div id="profile">
+   <img src="jet.gif">
+   <span>PLAYER</span>
+  </div>
+  <div id="stats">
+   <div id="scoreBox">SCORE: <span id="score">0</span></div>
+   <div id="hpBox">HP: <span id="hp">100</span></div>
+  </div>
+ </div>
 
-<div id="overlay">
- <h1>ZOMBIE BITZ</h1>
- <button onclick="startGame()">PLAY</button>
+ <div id="title">ZOMBIE BITZ</div>
+ <button id="playBtn" onclick="startGame()">PLAY</button>
 </div>
 
-<div id="gameOverOverlay">
+<div id="gameOver">
  <h1 style="color:red">DEFEAT ☠</h1>
  <p id="finalScore">SCORE: 0</p>
  <button onclick="restartGame()">RESTART</button>
@@ -52,59 +77,57 @@ canvas{display:block}
 <script>
 const canvas=document.getElementById("gameCanvas");
 const ctx=canvas.getContext("2d");
-canvas.width=innerWidth;
-canvas.height=innerHeight;
+canvas.width=innerWidth;canvas.height=innerHeight;
 
 const jetImg=new Image(); jetImg.src="jet.gif";
 const zombieImg=new Image(); zombieImg.src="zombie.png";
 
 let player,bullets,zombies,poisons,powers;
-let gameRunning=false,doubleFire=false;
-let fireTimer,spawnTimer;
+let running=false,fireLevel=1;
+let fireI,spawnI;
 
 function startGame(){
- overlay.style.display="none";
- gameOverOverlay.style.display="none";
- canvas.width=innerWidth;canvas.height=innerHeight;
+ menu.style.display="none";
+ gameOver.style.display="none";
+ canvas.style.display="block";
 
- player={x:canvas.width/2,y:canvas.height-80};
+ player={x:canvas.width/2,y:canvas.height-80,hp:100};
  bullets=[];zombies=[];poisons=[];powers=[];
- doubleFire=false;
+ fireLevel=1;
  score.innerText=0;
- gameRunning=true;
+ hp.innerText=100;
+ running=true;
 
- fireTimer=setInterval(autoFire,200);
- spawnTimer=setInterval(spawnZombie,1200);
- requestAnimationFrame(gameLoop);
-}
-
-function autoFire(){
- if(!gameRunning) return;
- bullets.push({x:player.x,y:player.y});
- if(doubleFire) bullets.push({x:player.x+15,y:player.y});
+ fireI=setInterval(autoFire,220);
+ spawnI=setInterval(spawnZombie,1300);
+ requestAnimationFrame(loop);
 }
 
 canvas.addEventListener("touchmove",e=>{
  player.x=e.touches[0].clientX;
 });
 
+function autoFire(){
+ if(!running) return;
+ for(let i=0;i<fireLevel;i++){
+  bullets.push({x:player.x+(i*10)-(fireLevel*5),y:player.y});
+ }
+}
+
 function spawnZombie(){
  zombies.push({
   x:Math.random()*(canvas.width-50)+25,
-  y:-40,
-  speed:2+Math.random()*1.5,
-  poisonTimer:0
+  y:-40,speed:2+Math.random()*1.5,
+  hp:50,t:0
  });
 }
 
-function gameLoop(){
- if(!gameRunning) return;
+function loop(){
+ if(!running) return;
  ctx.clearRect(0,0,canvas.width,canvas.height);
 
- /* PLAYER */
  ctx.drawImage(jetImg,player.x-20,player.y-20,40,40);
 
- /* BULLETS */
  bullets.forEach((b,i)=>{
   b.y-=10;
   ctx.fillStyle="yellow";
@@ -112,65 +135,56 @@ function gameLoop(){
   if(b.y<0) bullets.splice(i,1);
  });
 
- /* ZOMBIES */
  zombies.forEach((z,zi)=>{
   z.y+=z.speed;
   ctx.drawImage(zombieImg,z.x-25,z.y-25,50,50);
-
-  z.poisonTimer++;
-  if(z.poisonTimer>90){
-   poisons.push({x:z.x,y:z.y});
-   z.poisonTimer=0;
-  }
-
-  if(z.y>canvas.height) endGame();
+  z.t++;
+  if(z.t>100){poisons.push({x:z.x,y:z.y});z.t=0;}
 
   bullets.forEach((b,bi)=>{
    if(b.x>z.x-25&&b.x<z.x+25&&b.y>z.y-25&&b.y<z.y+25){
     bullets.splice(bi,1);
-    zombies.splice(zi,1);
-    score.innerText=parseInt(score.innerText)+10;
-    if(Math.random()<0.3)
-     powers.push({x:z.x,y:z.y});
+    z.hp-=10;
+    if(z.hp<=0){
+     zombies.splice(zi,1);
+     score.innerText=parseInt(score.innerText)+10;
+     if(Math.random()<0.12)powers.push({x:z.x,y:z.y});
+    }
    }
   });
  });
 
- /* POISON */
- poisons.forEach(p=>{
+ poisons.forEach((p,pi)=>{
   p.y+=5;
   ctx.fillStyle="lime";
-  ctx.beginPath();
-  ctx.arc(p.x,p.y,5,0,Math.PI*2);
-  ctx.fill();
-  if(Math.abs(p.x-player.x)<15&&Math.abs(p.y-player.y)<15)
-   endGame();
+  ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);ctx.fill();
+  if(Math.abs(p.x-player.x)<15&&Math.abs(p.y-player.y)<15){
+   player.hp-=30;
+   hp.innerText=player.hp;
+   poisons.splice(pi,1);
+   if(player.hp<=0) endGame();
+  }
  });
 
- /* POWER DROP */
  powers.forEach((pw,pi)=>{
   pw.y+=3;
   ctx.fillStyle="cyan";
-  ctx.beginPath();
-  ctx.arc(pw.x,pw.y,8,0,Math.PI*2);
-  ctx.fill();
-  ctx.fillStyle="#000";
-  ctx.fillText("+",pw.x-3,pw.y+4);
+  ctx.beginPath();ctx.arc(pw.x,pw.y,8,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#000";ctx.fillText("+",pw.x-3,pw.y+4);
   if(Math.abs(pw.x-player.x)<15&&Math.abs(pw.y-player.y)<15){
-   doubleFire=true;
+   fireLevel=Math.min(5,fireLevel+1);
    powers.splice(pi,1);
   }
  });
 
- requestAnimationFrame(gameLoop);
+ requestAnimationFrame(loop);
 }
 
 function endGame(){
- gameRunning=false;
- clearInterval(fireTimer);
- clearInterval(spawnTimer);
+ running=false;
+ clearInterval(fireI);clearInterval(spawnI);
  finalScore.innerText="SCORE: "+score.innerText;
- gameOverOverlay.style.display="flex";
+ gameOver.style.display="flex";
 }
 
 function restartGame(){startGame()}
