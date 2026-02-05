@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Zombie Mini Shooter - Image Version</title>
 <style>
 body{margin:0;overflow:hidden;background:#87ceeb;}
@@ -57,11 +57,13 @@ let moveDir=0;
 
 // Load images
 const zombieImg=new Image();
-zombieImg.src='zombie.png'; // Upload zombie.png in same folder
+zombieImg.src='zombie.png'; // Upload your zombie png here
+const playerImg=new Image();
+playerImg.src='army.png'; // Upload your army officer png here
 const boxImg=new Image();
-boxImg.src='army.png'; // Upload box.png in same folder
+boxImg.src='box.png'; // Upload box / obstacle png here
 
-// Create boxes on map
+// Create random boxes on map
 for(let i=0;i<5;i++){
   boxes.push({
     x:Math.random()*(canvas.width-60)+30,
@@ -93,9 +95,8 @@ function gameLoop(){
   if(player.x<player.width/2) player.x=player.width/2;
   if(player.x>canvas.width-player.width/2) player.x=canvas.width-player.width/2;
 
-  // Draw player
-  ctx.fillStyle='blue';
-  ctx.fillRect(player.x-player.width/2,player.y-player.height/2,player.width,player.height);
+  // Draw player image
+  ctx.drawImage(playerImg,player.x-player.width/2,player.y-player.height/2,player.width,player.height);
 
   // Update bullets
   bullets.forEach((b,i)=>{
