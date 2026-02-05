@@ -3,16 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Zombie Blitz Mobile</title>
+<title>Zombie Bitz</title>
 <style>
 body{margin:0;overflow:hidden;font-family:sans-serif;background:#87ceeb;}
+#overlay,#gameOverOverlay{
+  position:absolute;top:0;left:0;width:100%;height:100%;background:#222;color:white;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:20;
+}
+#overlay button,#gameOverOverlay button{font-size:20px;margin:10px;padding:10px 25px;}
 #scoreBoard,#coinsBoard{
   position:absolute;z-index:10;font-size:20px;color:white;
 }
 #scoreBoard{top:10px;left:10px;}
 #coinsBoard{top:10px;right:10px;color:yellow;}
 #shopPanel{
-  display:none;position:absolute;top:50px;right:10px;width:180px;height:250px;background:#333;color:white;padding:10px;z-index:10;overflow:auto;border-radius:10px;
+  display:none;position:absolute;top:50px;right:10px;width:180px;height:250px;
+  background:#333;color:white;padding:10px;z-index:10;overflow:auto;border-radius:10px;
 }
 button{padding:10px;margin:5px;font-size:16px;border:none;border-radius:5px;background:#555;color:white;}
 #joystickContainer{position:absolute;bottom:20px;left:20px;width:100px;height:100px;z-index:10;}
@@ -22,22 +28,27 @@ button{padding:10px;margin:5px;font-size:16px;border:none;border-radius:5px;back
 #fireBtn{bottom:30px;right:20px;}
 #jumpBtn{bottom:100px;right:20px;}
 #grenadeBtn{bottom:170px;right:20px;}
-#overlay{
-  position:absolute;top:0;left:0;width:100%;height:100%;background:#222;color:white;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:20;
-}
-#overlay button{font-size:20px;margin:10px;padding:10px 25px;}
 </style>
 </head>
 <body>
 
 <div id="overlay">
-  <h1>Zombie Blitz</h1>
+  <h1>Zombie Blitz Pro</h1>
   <button onclick="startGame()">Play</button>
   <button onclick="toggleShop()">Shop</button>
+  <button onclick="quitGame()">Quit</button>
+</div>
+
+<div id="gameOverOverlay" style="display:none;">
+  <h1>Game Over</h1>
+  <p id="finalScore">Score: 0</p>
+  <button onclick="restartGame()">Restart</button>
+  <button onclick="backToMenu()">Main Menu</button>
 </div>
 
 <div id="scoreBoard">Score: 0</div>
 <div id="coinsBoard">Coins: 0</div>
+
 <div id="shopPanel">
   <h3>Shop</h3>
   <button onclick="buyGun('Pistol',0)">Pistol (Default)</button><br>
@@ -55,14 +66,15 @@ button{padding:10px;margin:5px;font-size:16px;border:none;border-radius:5px;back
 <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
 
 <script>
-// Scene
-let scene, camera, renderer, controls;
+// ====== Basic setup ======
+let scene,camera,renderer,controls;
 let player={health:100,score:0,coins:0,gun:'Pistol'};
-let zombies=[],bullets=[];
+let zombies=[],bullets=[],grenades=[];
 let gameStarted=false,wave=1;
 let move={forward:0,right:0};
+let gunMesh;
 
-// INIT
+// Initialize scene
 function init(){
   scene=new THREE.Scene();
   scene.background=new THREE.Color(0x87ceeb);
@@ -74,7 +86,6 @@ function init(){
   renderer.setSize(window.innerWidth,window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  // Light
   const light=new THREE.DirectionalLight(0xffffff,1);
   light.position.set(0,50,50);
   scene.add(light);
@@ -86,25 +97,24 @@ function init(){
   ground.position.y=-0.5;
   scene.add(ground);
 
-  // Simple obstacles
-  for(let i=0;i<5;i++){
+  // Obstacles
+  for(let i=0;i<10;i++){
     const box=new THREE.Mesh(new THREE.BoxGeometry(3,3,3), new THREE.MeshStandardMaterial({color:0x8B4513}));
     box.position.set(Math.random()*40-20,1.5,Math.random()*40-20);
     scene.add(box);
   }
 
-  // Player hand + gun placeholder
-  const gun=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.2,1), new THREE.MeshStandardMaterial({color:0x000000}));
-  gun.position.set(0,-0.2,-0.5);
-  camera.add(gun);
+  // Player hand + gun
+  gunMesh=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.2,1), new THREE.MeshStandardMaterial({color:0x000000}));
+  gunMesh.position.set(0,-0.2,-0.5);
+  camera.add(gunMesh);
   scene.add(camera);
 
   controls=new THREE.PointerLockControls(camera,document.body);
-
   document.addEventListener('click',()=>{if(gameStarted && !controls.isLocked) controls.lock();});
 
-  // Zombies spawn interval
-  setInterval(spawnZombie,3000);
+  // Zombies spawn
+  setInterval(spawnZombie,2000);
 
   animate();
 }
@@ -117,9 +127,9 @@ joystick.on('end',()=>{move.forward=0;move.right=0;});
 // Buttons
 document.getElementById('fireBtn').addEventListener('touchstart',shootBullet);
 document.getElementById('jumpBtn').addEventListener('touchstart',()=>{camera.position.y+=1;});
-document.getElementById('grenadeBtn').addEventListener('touchstart',()=>{explodeGrenade();});
+document.getElementById('grenadeBtn').addEventListener('touchstart',throwGrenade);
 
-// Zombie spawn
+// Spawn zombie
 function spawnZombie(){
   if(!gameStarted) return;
   const z=new THREE.Mesh(new THREE.BoxGeometry(1,2,1),new THREE.MeshStandardMaterial({color:0xff0000}));
@@ -129,7 +139,7 @@ function spawnZombie(){
   scene.add(z);
 }
 
-// Shoot bullet
+// Shoot
 function shootBullet(){
   if(!gameStarted) return;
   const b=new THREE.Mesh(new THREE.SphereGeometry(0.1,8,8),new THREE.MeshBasicMaterial({color:0xffff00}));
@@ -140,28 +150,28 @@ function shootBullet(){
   scene.add(b);
 }
 
-// Grenade explosion
-function explodeGrenade(){
-  zombies.forEach(z=>{
-    if(z.position.distanceTo(camera.position)<5) z.health=0;
-  });
+// Grenade
+function throwGrenade(){
+  if(!gameStarted) return;
+  zombies.forEach(z=>{if(z.position.distanceTo(camera.position)<5) z.health=0;});
 }
 
-// Animate loop
+// Animate
 function animate(){
   requestAnimationFrame(animate);
   if(gameStarted){
-    let speed=0.05;
-    controls.moveForward(move.forward*speed*-1);
-    controls.moveRight(move.right*speed);
+    controls.moveForward(move.forward*0.05*-1);
+    controls.moveRight(move.right*0.05);
 
+    // Zombies
     zombies.forEach((z,i)=>{
       const dir=new THREE.Vector3();
       dir.subVectors(camera.position,z.position).normalize();
       z.position.add(dir.multiplyScalar(0.02));
-      if(z.position.distanceTo(camera.position)<1){player.health-=0.2;if(player.health<=0) gameOver();}
+      if(z.position.distanceTo(camera.position)<1){player.health-=0.3;if(player.health<=0) gameOver();}
     });
 
+    // Bullets
     bullets.forEach((b,i)=>{
       b.position.add(b.direction.clone().multiplyScalar(0.5));
       zombies.forEach((z,j)=>{
@@ -178,15 +188,14 @@ function animate(){
   renderer.render(scene,camera);
 }
 
-// Start game
+// Game control
 function startGame(){gameStarted=true;player.health=100;document.getElementById('overlay').style.display='none';}
-
-// Shop
-function toggleShop(){document.getElementById('shopPanel').style.display=document.getElementById('shopPanel').style.display==='none'?'block':'none';}
+function toggleShop(){const s=document.getElementById('shopPanel');s.style.display=s.style.display==='none'?'block':'none';}
 function buyGun(name,price){if(player.coins>=price){player.coins-=price;player.gun=name;alert(name+' equipped!');}else alert('Not enough coins!');}
-
-// Game over
-function gameOver(){alert('Game Over! Score: '+Math.floor(player.score));gameStarted=false;document.getElementById('overlay').style.display='flex';}
+function quitGame(){alert('Thanks for playing!');window.location.reload();}
+function restartGame(){document.getElementById('gameOverOverlay').style.display='none';player.health=100;player.score=0;player.coins=0;zombies.forEach(z=>scene.remove(z));zombies=[];gameStarted=true;}
+function backToMenu(){document.getElementById('gameOverOverlay').style.display='none';document.getElementById('overlay').style.display='flex';player.health=100;player.score=0;player.coins=0;zombies.forEach(z=>scene.remove(z));zombies=[];gameStarted=false;}
+function gameOver(){document.getElementById('finalScore').innerText='Score: '+Math.floor(player.score);document.getElementById('gameOverOverlay').style.display='flex';gameStarted=false;}
 
 init();
 </script>
