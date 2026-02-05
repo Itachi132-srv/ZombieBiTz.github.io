@@ -10,113 +10,78 @@
 body{
   margin:0;
   overflow:hidden;
-  background: radial-gradient(circle at top, #1a1a1a, #0d0d0d 80%);
+  background:#000;
   font-family: 'Orbitron', sans-serif;
 }
 
-/* Main menu overlay */
-#overlay{
+/* overlays SAME */
+#overlay,#gameOverOverlay{
   position:absolute;
   top:0;left:0;width:100%;height:100%;
-  display:flex;flex-direction:column;justify-content:center;align-items:center;
-  background: radial-gradient(circle at center, #111, #000);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
   z-index:10;
-  color:#88ff88;
 }
 
-/* Title centered */
-#overlay h1{
-  font-family: 'Press Start 2P', cursive;
-  font-size: 3em;
-  color:#88ff88;
-  margin-bottom:50px;
-  text-align:center;
-}
+#overlay{background:#000;color:#88ff88;}
+#gameOverOverlay{background:rgba(0,0,0,0.9);color:#ff5050;display:none;}
 
-/* Menu buttons normal color */
-#overlay button{
-  font-family: 'Orbitron', sans-serif;
-  font-weight:bold;
-  font-size: 1.5em;
-  margin:10px;
-  padding:15px 40px;
-  border:none;
-  border-radius:10px;
-  cursor:pointer;
-  transition: all 0.2s;
-  color:#fff;
-  background:#333;
-}
-#overlay button:hover{
-  background:#555;
-}
-
-/* Game Over Overlay */
-#gameOverOverlay{
-  position:absolute;
-  top:0;left:0;width:100%;height:100%;
-  display:flex;flex-direction:column;justify-content:center;align-items:center;
-  background: rgba(0,0,0,0.9);
-  z-index:10;
-  color:#ff5050;
-  text-align:center;
-}
+#overlay h1,
 #gameOverOverlay h1{
-  font-family: 'Press Start 2P', cursive;
-  font-size: 3em;
-  color:#ff5050;
-  margin-bottom:20px;
-}
-#gameOverOverlay h1::after{
-  content: " ☠";
-  font-size: 0.8em;
-  margin-left:10px;
-}
-#gameOverOverlay button{
-  font-family: 'Orbitron', sans-serif;
-  font-weight:bold;
-  font-size:1.2em;
-  margin:10px;
-  padding:12px 35px;
-  border:none;
-  border-radius:10px;
-  cursor:pointer;
-  transition: all 0.2s;
-  color:white;
-  background:#333;
-}
-#restartBtn::before{
-  content:"↻ ";
-}
-#menuBtn::before{
-  content:"⌂ ";
+  font-family:'Press Start 2P', cursive;
+  font-size:3em;
 }
 
-/* Canvas buttons - white outline only, default font */
+#overlay button,
+#gameOverOverlay button{
+  font-family:'Orbitron', sans-serif;
+  font-size:1.2em;
+  padding:12px 35px;
+  margin:10px;
+  border:none;
+  border-radius:10px;
+  background:#333;
+  color:#fff;
+}
+
+#restartBtn::before{content:"↻ ";}
+#menuBtn::before{content:"⌂ ";}
+
+canvas{display:block;}
+
 #fireBtn{
-  position:absolute;bottom:20px;right:20px;width:80px;height:80px;
-  border:2px solid #fff;border-radius:40px;color:white;font-size:20px;
-  background:transparent; box-shadow:none; cursor:pointer;
-  font-family: Arial, sans-serif;
+  position:absolute;bottom:20px;right:20px;
+  width:80px;height:80px;
+  border:2px solid #fff;
+  border-radius:40px;
+  background:transparent;
+  color:white;
+  font-size:20px;
 }
 #leftBtn,#rightBtn{
-  position:absolute;bottom:20px;width:60px;height:60px;
-  border:2px solid #fff;border-radius:30px;color:white;font-size:18px;
-  background:transparent; box-shadow:none; cursor:pointer;
-  font-family: Arial, sans-serif;
+  position:absolute;bottom:20px;
+  width:60px;height:60px;
+  border:2px solid #fff;
+  border-radius:30px;
+  background:transparent;
+  color:white;
 }
-#rightBtn{left:100px;}
 #leftBtn{left:20px;}
+#rightBtn{left:100px;}
 </style>
 </head>
+
 <body>
+
 <div id="overlay">
   <h1>Zombie BiTz</h1>
   <button onclick="startGame()">Play</button>
   <button onclick="quitGame()">Quit</button>
 </div>
 
-<div id="gameOverOverlay" style="display:none;">
+<div id="gameOverOverlay">
   <h1>Defeat ☠</h1>
   <p id="finalScore">Score: 0</p>
   <button id="restartBtn" onclick="restartGame()">Restart</button>
@@ -131,71 +96,58 @@ body{
 <script>
 const canvas=document.getElementById('gameCanvas');
 const ctx=canvas.getContext('2d');
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
+canvas.width=innerWidth;
+canvas.height=innerHeight;
 
 let player={x:canvas.width/2,y:canvas.height-50,width:40,height:40,speed:7,score:0};
-let bullets=[];
-let zombies=[];
-let boxes=[];
-let gameStarted=false;
-let enemySpawnInterval;
-let moveDir=0;
+let bullets=[], zombies=[], boxes=[];
+let gameStarted=false, enemySpawnInterval, moveDir=0;
 
-// Load images
+/* IMAGES */
 const zombieImg=new Image(); zombieImg.src='zombie.png';
 const playerImg=new Image(); playerImg.src='jet.png';
-const boxImg=new Image(); boxImg.src='';
+const bgImg=new Image(); bgImg.src='background.png'; // 👈 BACKGROUND IMAGE
 
-// Boxes
 for(let i=0;i<5;i++){
   boxes.push({
     x:Math.random()*(canvas.width-60)+30,
     y:Math.random()*(canvas.height-300)+50,
-    width:50,
-    height:50
+    width:50,height:50
   });
 }
 
-// Controls
-document.getElementById('leftBtn').addEventListener('touchstart',()=>{moveDir=-1;});
-document.getElementById('leftBtn').addEventListener('touchend',()=>{moveDir=0;});
-document.getElementById('rightBtn').addEventListener('touchstart',()=>{moveDir=1;});
-document.getElementById('rightBtn').addEventListener('touchend',()=>{moveDir=0;});
-document.getElementById('fireBtn').addEventListener('touchstart',fireBullet);
+leftBtn.ontouchstart=()=>moveDir=-1;
+leftBtn.ontouchend=()=>moveDir=0;
+rightBtn.ontouchstart=()=>moveDir=1;
+rightBtn.ontouchend=()=>moveDir=0;
+fireBtn.ontouchstart=fireBullet;
 
 function gameLoop(){
   if(!gameStarted) return;
-  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // Background
-  const bgGradient=ctx.createLinearGradient(0,0,canvas.width,canvas.height);
-  bgGradient.addColorStop(0,'#1a1a1a');
-  bgGradient.addColorStop(1,'#0d0d0d');
-  ctx.fillStyle=bgGradient;
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  // BACKGROUND IMAGE
+  if(bgImg.complete){
+    ctx.drawImage(bgImg,0,0,canvas.width,canvas.height);
+  }else{
+    ctx.fillStyle='#000';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+  }
 
-  // Boxes
-  boxes.forEach(box=>{
-    ctx.drawImage(boxImg,box.x-box.width/2,box.y-box.height/2,box.width,box.height);
-  });
-
-  // Player
+  // PLAYER
   player.x+=player.speed*moveDir;
-  if(player.x<player.width/2) player.x=player.width/2;
-  if(player.x>canvas.width-player.width/2) player.x=canvas.width-player.width/2;
-  ctx.drawImage(playerImg,player.x-player.width/2,player.y-player.height/2,player.width,player.height);
+  player.x=Math.max(player.width/2,Math.min(canvas.width-player.width/2,player.x));
+  ctx.drawImage(playerImg,player.x-20,player.y-20,40,40);
 
-  // Bullets
+  // BULLETS (SKY BLUE)
   bullets.forEach((b,i)=>{
     b.y-=b.speed;
-    ctx.fillStyle='yellow';
+    ctx.fillStyle='#4fc3ff'; // 👈 SKY BLUE
     ctx.beginPath();
     ctx.arc(b.x,b.y,5,0,Math.PI*2);
     ctx.fill();
 
     zombies.forEach((z,j)=>{
-      if(b.x>z.x-z.width/2 && b.x<z.x+z.width/2 && b.y>z.y-z.height/2 && b.y<z.y+z.height/2){
+      if(b.x>z.x-25 && b.x<z.x+25 && b.y>z.y-25 && b.y<z.y+25){
         bullets.splice(i,1);
         zombies.splice(j,1);
         player.score+=10;
@@ -203,14 +155,13 @@ function gameLoop(){
     });
   });
 
-  // Zombies
-  zombies.forEach((z)=>{
+  // ZOMBIES
+  zombies.forEach(z=>{
     z.y+=z.speed;
-    ctx.drawImage(zombieImg,z.x-z.width/2,z.y-z.height/2,z.width,z.height);
-    if(z.y>canvas.height){ gameOver(); }
+    ctx.drawImage(zombieImg,z.x-25,z.y-25,50,50);
+    if(z.y>canvas.height) gameOver();
   });
 
-  // Score
   ctx.fillStyle='white';
   ctx.font='20px Orbitron';
   ctx.fillText('Score: '+player.score,10,30);
@@ -219,40 +170,36 @@ function gameLoop(){
 }
 
 function spawnZombie(){
-  if(!gameStarted) return;
-  const x=Math.random()*(canvas.width-60)+30;
-  zombies.push({x:x,y:-40,width:50,height:50,speed:2+Math.random()*1});
+  zombies.push({
+    x:Math.random()*(canvas.width-60)+30,
+    y:-40,width:50,height:50,speed:2+Math.random()
+  });
 }
 
-document.addEventListener('keydown',e=>{
-  if(e.key==='ArrowLeft') moveDir=-1;
-  if(e.key==='ArrowRight') moveDir=1;
-  if(e.key===' ') fireBullet();
-});
-document.addEventListener('keyup',e=>{
-  if(e.key==='ArrowLeft' || e.key==='ArrowRight') moveDir=0;
-});
-
-function fireBullet(){ if(!gameStarted) return; bullets.push({x:player.x,y:player.y-20,speed:10}); }
+function fireBullet(){
+  if(!gameStarted) return;
+  bullets.push({x:player.x,y:player.y-20,speed:10});
+}
 
 function startGame(){
   gameStarted=true;
-  player.score=0;
-  bullets=[];
-  zombies=[];
-  document.getElementById('overlay').style.display='none';
+  bullets=[]; zombies=[]; player.score=0;
+  overlay.style.display='none';
   enemySpawnInterval=setInterval(spawnZombie,1000);
   gameLoop();
 }
+
 function gameOver(){
   clearInterval(enemySpawnInterval);
   gameStarted=false;
-  document.getElementById('finalScore').innerText='Score: '+player.score;
-  document.getElementById('gameOverOverlay').style.display='flex';
+  finalScore.innerText='Score: '+player.score;
+  gameOverOverlay.style.display='flex';
 }
-function restartGame(){document.getElementById('gameOverOverlay').style.display='none';startGame();}
-function backToMenu(){document.getElementById('gameOverOverlay').style.display='none';document.getElementById('overlay').style.display='flex';}
-function quitGame(){alert('Thanks for playing!');window.location.reload();}
+
+function restartGame(){gameOverOverlay.style.display='none';startGame();}
+function backToMenu(){gameOverOverlay.style.display='none';overlay.style.display='flex';}
+function quitGame(){location.reload();}
 </script>
+
 </body>
 </html>
