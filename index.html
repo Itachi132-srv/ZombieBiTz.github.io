@@ -10,13 +10,13 @@ body{margin:0;background:#000;color:#fff;font-family:'Orbitron',sans-serif;overf
 
 /* MAIN MENU */
 #menu{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:10px;height:100vh;z-index:10;}
-#menuTop{display:flex;justify-content:space-between;align-items:center;}
+#menuTop{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;}
 #profile{display:flex;align-items:center;gap:10px;cursor:pointer}
 #profile img{width:40px;height:40px;border-radius:8px;border:2px solid cyan}
-#highScore{font-size:16px}
+#highScore,#coinsBox{font-size:16px;margin:2px;}
 #menuCenter{text-align:center;margin-top:20px;}
-#menuBottom{display:flex;justify-content:space-around;margin-bottom:20px;}
-button{padding:12px 20px;border:none;border-radius:12px;font-family:'Orbitron',sans-serif;cursor:pointer;font-size:16px;}
+#menuBottom{display:flex;justify-content:space-around;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
+button{padding:12px 18px;border:none;border-radius:12px;font-family:'Orbitron',sans-serif;cursor:pointer;font-size:16px;}
 #shopBtn{background:gold;color:#000;}
 #playBtn{background:linear-gradient(135deg,#00c853,#b2ff59);color:#000;}
 #settingsBtn{background:gray;color:#fff;}
@@ -29,12 +29,20 @@ button{padding:12px 20px;border:none;border-radius:12px;font-family:'Orbitron',s
 
 /* GAME HUD */
 #gameTop{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:center;z-index:10;display:none}
-#hpBox,#scoreBox{background:#111;padding:6px 14px;border-radius:10px;font-size:16px}
+#hpBox,#scoreBox,#coinsGame{background:#111;padding:6px 14px;border-radius:10px;font-size:16px}
 
 /* GAME OVER */
-#gameOver{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;align-items:center;background:rgba(0,0,0,.95);z-index:30;text-align:center;}
+#gameOver{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;align-items:center;background:rgba(0,0,0,.95);z-index:30;text-align:center;padding:10px;}
 #gameOver h1{color:red;margin-bottom:10px;font-size:28px}
 #gameOver p{margin:5px;font-size:16px;}
+#gameOver button{margin:5px 10px;padding:12px 20px;border-radius:12px;font-size:16px;}
+
+/* MOBILE ADJUST */
+@media(max-width:600px){
+ #menuBottom{flex-direction:column;gap:8px;}
+ #menuTop{flex-direction:column;align-items:flex-start;}
+ #menuTop div{margin-bottom:5px;}
+}
 </style>
 </head>
 <body>
@@ -44,6 +52,7 @@ button{padding:12px 20px;border:none;border-radius:12px;font-family:'Orbitron',s
  <div id="menuTop">
   <div id="profile" onclick="openProfile()"><img id="pfp"><span id="pname">PLAYER</span></div>
   <div id="highScore">HIGH SCORE: 0</div>
+  <div id="coinsBox">COINS: 0 💰</div>
  </div>
  <div id="menuCenter"><h1 style="font-family:'Press Start 2P';font-size:24px;">ZOMBIE BITZ</h1></div>
  <div id="menuBottom">
@@ -68,7 +77,7 @@ button{padding:12px 20px;border:none;border-radius:12px;font-family:'Orbitron',s
  <h2>PROFILE</h2>
  <input id="nameInput" placeholder="ENTER NAME">
  <input type="file" accept="image/*" id="pfpFile">
- <button id="saveProfileBtn" class="btn">SAVE</button>
+ <button id="saveProfileBtn" class="btn">SAVE (50k COINS)</button>
  <button class="btn" onclick="closeAll()">BACK</button>
 </div>
 
@@ -82,13 +91,14 @@ button{padding:12px 20px;border:none;border-radius:12px;font-family:'Orbitron',s
 <div id="gameTop">
  <div id="hpBox">HP: <span id="hp">100</span></div>
  <div id="scoreBox">SCORE: <span id="score">0</span></div>
+ <div id="coinsGame">COINS: <span id="coins">0</span></div>
 </div>
 
 <!-- GAME OVER -->
 <div id="gameOver">
  <h1>DEFEAT ☠</h1>
  <p id="finalScore">SCORE: 0</p>
- <p id="earnedCoins">COINS EARNED: 0</p>
+ <p id="coinsEarned">COINS EARNED: 0</p>
  <button id="restartBtn">RESTART</button>
  <button id="backMenuBtn">MAIN MENU</button>
 </div>
@@ -97,10 +107,11 @@ button{padding:12px 20px;border:none;border-radius:12px;font-family:'Orbitron',s
 
 <script>
 /* STORAGE */
-let data=JSON.parse(localStorage.getItem("ZB"))||{name:"PLAYER",pfp:"",high:0};
+let data=JSON.parse(localStorage.getItem("ZB"))||{name:"PLAYER",pfp:"",high:0,coins:0};
 pname.innerText=data.name;
 if(data.pfp) pfp.src=data.pfp;
 document.getElementById("highScore").innerText="HIGH SCORE: "+data.high;
+document.getElementById("coinsBox").innerText="COINS: "+data.coins+" 💰";
 
 /* UI FUNCTIONS */
 function closeAll(){document.querySelectorAll('.overlay').forEach(o=>o.style.display="none");}
@@ -110,49 +121,49 @@ function openProfile(){closeAll();profileUI.style.display="flex";}
 
 /* PROFILE */
 document.getElementById("saveProfileBtn").onclick=function(){
+ if(data.coins<50000){alert("YOU NEED 50k COINS"); return;}
+ data.coins-=50000;
  data.name=nameInput.value||data.name;
- localStorage.setItem("ZB",JSON.stringify(data));
- location.reload();
+ if(pfpFile.files[0]){
+  let reader=new FileReader();
+  reader.onload=()=>{data.pfp=reader.result;localStorage.setItem("ZB",JSON.stringify(data)); location.reload();}
+  reader.readAsDataURL(pfpFile.files[0]);
+ } else {localStorage.setItem("ZB",JSON.stringify(data)); location.reload();}
 }
-document.getElementById("pfpFile").addEventListener("change",function(){
- let reader=new FileReader();
- reader.onload=()=>{data.pfp=reader.result;localStorage.setItem("ZB",JSON.stringify(data));}
- reader.readAsDataURL(this.files[0]);
-})
 
 /* SETTINGS */
 let music=false,sound=false,fps=60;
-document.getElementById("musicBtn").onclick=function(){music=!music;this.innerText=music?"ON":"OFF";this.style.backgroundColor=music?"green":"red";}
-document.getElementById("soundBtn").onclick=function(){sound=!sound;this.innerText=sound?"ON":"OFF";this.style.backgroundColor=sound?"green":"red";}
-document.getElementById("fps30").onclick=function(){fps=30;fps30.style.backgroundColor="green";fps60.style.backgroundColor="red";}
-document.getElementById("fps60").onclick=function(){fps=60;fps60.style.backgroundColor="green";fps30.style.backgroundColor="red";}
-document.getElementById("saveSettings").onclick=function(){savedTxt.style.display="inline";setTimeout(()=>savedTxt.style.display="none",2000);}
+musicBtn.onclick=function(){music=!music;this.innerText=music?"ON":"OFF";this.style.backgroundColor=music?"green":"red";}
+soundBtn.onclick=function(){sound=!sound;this.innerText=sound?"ON":"OFF";this.style.backgroundColor=sound?"green":"red";}
+fps30.onclick=function(){fps=30;fps30.style.backgroundColor="green";fps60.style.backgroundColor="red";}
+fps60.onclick=function(){fps=60;fps60.style.backgroundColor="green";fps30.style.backgroundColor="red";}
+saveSettings.onclick=function(){savedTxt.style.display="inline";setTimeout(()=>savedTxt.style.display="none",2000);}
 
 /* MENU BUTTONS */
-document.getElementById("playBtn").onclick=startGame;
-document.getElementById("shopBtn").onclick=openShop;
-document.getElementById("settingsBtn").onclick=openSettings;
+playBtn.onclick=startGame;
+shopBtn.onclick=openShop;
+settingsBtn.onclick=openSettings;
 
 /* GAME OVER BUTTONS */
-document.getElementById("restartBtn").onclick=restartGame;
-document.getElementById("backMenuBtn").onclick=()=>{location.reload();}
+restartBtn.onclick=restartGame;
+backMenuBtn.onclick=()=>{location.reload();}
 
 /* GAME LOGIC */
 const canvas=document.getElementById("gameCanvas");
 const ctx=canvas.getContext("2d");
 canvas.width=window.innerWidth; canvas.height=window.innerHeight;
 
-let player, bullets=[], zombies=[], poisons=[], wave=1, scoreNum=0, HP=100, doubleFire=false, fireI, spawnI;
+let player, bullets=[], zombies=[], wave=1, scoreNum=0, HP=100, doubleFire=false, coinsGame=0, fireI, spawnI;
 const jetImg=new Image(); jetImg.src="jet.gif";
 const zombieImg=new Image(); zombieImg.src="zombie.png";
 const bossImg=new Image(); bossImg.src="boss.png";
 
 function startGame(){
- if(player) return;
  player={x:canvas.width/2,y:canvas.height-80,HP:100};
- bullets=[];zombies=[];poisons=[];wave=1;scoreNum=0;HP=100;doubleFire=false;
+ bullets=[];zombies=[];wave=1;scoreNum=0;HP=100;doubleFire=false;coinsGame=0;
  document.getElementById("hp").innerText=HP;
  document.getElementById("score").innerText=scoreNum;
+ document.getElementById("coins").innerText=coinsGame;
  menu.style.display="none";canvas.style.display="block";gameTop.style.display="flex";gameOver.style.display="none";
  fireI=setInterval(autoFire,200); spawnI=setInterval(spawnWave,2000); requestAnimationFrame(loop);
 }
@@ -168,8 +179,7 @@ function autoFire(){for(let i=0;i<(doubleFire?2:1);i++) bullets.push({x:player.x
 /* SPAWN WAVE */
 function spawnWave(){
  for(let i=0;i<wave;i++){
-  let zombieType=Math.random()<0.1 && wave===10?"boss":"normal";
-  zombies.push({x:Math.random()*(canvas.width-50)+25,y:-40,hp:zombieType==="boss"?300:50,type:zombieType,t:0});
+  zombies.push({x:Math.random()*(canvas.width-50)+25,y:-40,hp:50,type:"normal",t:0});
  }
  if(wave<10) wave++;
 }
@@ -183,13 +193,18 @@ function loop(){
 
  zombies.forEach((z,zi)=>{
   z.y+=2+wave*0.1; z.t++;
-  if(z.type==="boss") ctx.drawImage(bossImg,z.x-30,z.y-30,60,60); else ctx.drawImage(zombieImg,z.x-25,z.y-25,50,50);
-  bullets.forEach((b,bi)=>{if(Math.abs(b.x-z.x)<25 && Math.abs(b.y-z.y)<25){z.hp-=25; bullets.splice(bi,1); if(z.hp<=0){zombies.splice(zi,1);scoreNum+=10;document.getElementById("score").innerText=scoreNum;}}});
-  if(z.t>90){poisons.push({x:z.x,y:z.y});z.t=0;}
-  if(Math.abs(player.x-z.x)<25 && Math.abs(player.y-z.y)<25){HP-=35;document.getElementById("hp").innerText=HP;poisons.splice(0,1);}
+  ctx.drawImage(zombieImg,z.x-25,z.y-25,50,50);
+
+  bullets.forEach((b,bi)=>{
+   if(Math.abs(b.x-z.x)<25 && Math.abs(b.y-z.y)<25){
+    z.hp-=25; bullets.splice(bi,1);
+    if(z.hp<=0){zombies.splice(zi,1);scoreNum+=10;coinsGame+=10;document.getElementById("score").innerText=scoreNum;document.getElementById("coins").innerText=coinsGame;}
+   }
+  });
+
+  if(Math.abs(player.x-z.x)<25 && Math.abs(player.y-z.y)<25){HP-=35;document.getElementById("hp").innerText=HP;}
  });
 
- poisons.forEach((p,pi)=>{p.y+=5;ctx.fillStyle="lime";ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);ctx.fill();if(Math.abs(player.x-p.x)<15 && Math.abs(player.y-p.y)<15){HP-=35;document.getElementById("hp").innerText=HP;poisons.splice(pi,1);}});
  if(HP<=0) endGame();
  requestAnimationFrame(loop);
 }
@@ -197,8 +212,9 @@ function loop(){
 function endGame(){
  clearInterval(fireI); clearInterval(spawnI);
  finalScore.innerText="SCORE: "+scoreNum;
+ coinsEarned.innerText="COINS EARNED: "+coinsGame;
  gameOver.style.display="flex";canvas.style.display="none";gameTop.style.display="none";
- if(scoreNum>data.high){data.high=scoreNum;localStorage.setItem("ZB",JSON.stringify(data));}
+ if(scoreNum>data.high){data.high=scoreNum;data.coins+=coinsGame;localStorage.setItem("ZB",JSON.stringify(data));}
 }
 
 function restartGame(){player=null;startGame();}
