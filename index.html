@@ -2,14 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Zombie BiTz</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Press+Start+2P&display=swap');
 body{margin:0;background:#000;color:#fff;font-family:'Orbitron',sans-serif;overflow:hidden}
 *{box-sizing:border-box}
 
-/* ===== MAIN MENU ===== */
+/* MAIN MENU */
 #menu{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:10px;height:100vh;z-index:10;}
 #menuTop{display:flex;justify-content:space-between;align-items:center;}
 #profile{display:flex;align-items:center;gap:10px;cursor:pointer}
@@ -22,12 +21,10 @@ button{padding:12px 20px;border:none;border-radius:12px;font-family:'Orbitron',s
 #playBtn{background:linear-gradient(135deg,#00c853,#b2ff59);color:#000;}
 #settingsBtn{background:gray;color:#fff;}
 
-/* SETTINGS MENU */
-.overlay{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;align-items:center;background:rgba(0,0,0,.95);z-index:20;width:100%}
+/* OVERLAYS */
+.overlay{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;align-items:center;background:rgba(0,0,0,.95);z-index:20;width:100%;}
 .option{margin:10px;font-size:18px;}
 .option button{margin-left:10px;padding:5px 12px;border-radius:6px;font-size:16px;}
-
-/* PROFILE MENU */
 #profileUI input{margin:5px;padding:8px;border-radius:6px;border:none;font-size:16px}
 
 /* GAME HUD */
@@ -50,19 +47,19 @@ button{padding:12px 20px;border:none;border-radius:12px;font-family:'Orbitron',s
  </div>
  <div id="menuCenter"><h1 style="font-family:'Press Start 2P';font-size:24px;">ZOMBIE BITZ</h1></div>
  <div id="menuBottom">
-  <button id="shopBtn" onclick="openShop()">SHOP</button>
-  <button id="playBtn" onclick="startGame()">PLAY</button>
-  <button id="settingsBtn" onclick="openSettings()">SETTINGS</button>
+  <button id="shopBtn">SHOP</button>
+  <button id="playBtn">PLAY</button>
+  <button id="settingsBtn">SETTINGS</button>
  </div>
 </div>
 
 <!-- SETTINGS MENU -->
 <div class="overlay" id="settingsUI">
  <h2>SETTINGS</h2>
- <div class="option">Music <button id="musicBtn" onclick="toggleMusic()">OFF</button></div>
- <div class="option">Sound FX <button id="soundBtn" onclick="toggleSound()">OFF</button></div>
- <div class="option">FPS <button id="fps30" onclick="setFPS(30)">30</button><button id="fps60" onclick="setFPS(60)">60</button></div>
- <button onclick="saveSettings()" class="btn">SAVE</button><span id="savedTxt" style="margin-left:10px;color:lime;display:none">SAVED</span>
+ <div class="option">Music <button id="musicBtn">OFF</button></div>
+ <div class="option">Sound FX <button id="soundBtn">OFF</button></div>
+ <div class="option">FPS <button id="fps30">30</button><button id="fps60">60</button></div>
+ <button id="saveSettings" class="btn">SAVE</button><span id="savedTxt" style="margin-left:10px;color:lime;display:none">SAVED</span>
  <button class="btn" onclick="closeAll()">BACK</button>
 </div>
 
@@ -70,8 +67,8 @@ button{padding:12px 20px;border:none;border-radius:12px;font-family:'Orbitron',s
 <div class="overlay" id="profileUI">
  <h2>PROFILE</h2>
  <input id="nameInput" placeholder="ENTER NAME">
- <input type="file" accept="image/*" onchange="setPFP(this)">
- <button onclick="saveProfile()" class="btn">SAVE</button>
+ <input type="file" accept="image/*" id="pfpFile">
+ <button id="saveProfileBtn" class="btn">SAVE</button>
  <button class="btn" onclick="closeAll()">BACK</button>
 </div>
 
@@ -92,8 +89,8 @@ button{padding:12px 20px;border:none;border-radius:12px;font-family:'Orbitron',s
  <h1>DEFEAT ☠</h1>
  <p id="finalScore">SCORE: 0</p>
  <p id="earnedCoins">COINS EARNED: 0</p>
- <button onclick="restartGame()">RESTART</button>
- <button onclick="backToMenu()">MAIN MENU</button>
+ <button id="restartBtn">RESTART</button>
+ <button id="backMenuBtn">MAIN MENU</button>
 </div>
 
 <canvas id="gameCanvas"></canvas>
@@ -112,36 +109,51 @@ function openShop(){closeAll();shopUI.style.display="flex";}
 function openProfile(){closeAll();profileUI.style.display="flex";}
 
 /* PROFILE */
-function saveProfile(){data.name=nameInput.value||data.name;localStorage.setItem("ZB",JSON.stringify(data));location.reload();}
-function setPFP(file){let reader=new FileReader();reader.onload=()=>{data.pfp=reader.result;localStorage.setItem("ZB",JSON.stringify(data));}reader.readAsDataURL(file.files[0]);}
+document.getElementById("saveProfileBtn").onclick=function(){
+ data.name=nameInput.value||data.name;
+ localStorage.setItem("ZB",JSON.stringify(data));
+ location.reload();
+}
+document.getElementById("pfpFile").addEventListener("change",function(){
+ let reader=new FileReader();
+ reader.onload=()=>{data.pfp=reader.result;localStorage.setItem("ZB",JSON.stringify(data));}
+ reader.readAsDataURL(this.files[0]);
+})
 
 /* SETTINGS */
 let music=false,sound=false,fps=60;
-function toggleMusic(){music=!music;musicBtn.innerText=music?"ON":"OFF";musicBtn.style.backgroundColor=music?"green":"red";}
-function toggleSound(){sound=!sound;soundBtn.innerText=sound?"ON":"OFF";soundBtn.style.backgroundColor=sound?"green":"red";}
-function setFPS(v){fps=v;fps30.style.backgroundColor=fps===30?"green":"red";fps60.style.backgroundColor=fps===60?"green":"red";}
-function saveSettings(){savedTxt.style.display="inline";setTimeout(()=>savedTxt.style.display="none",2000);}
+document.getElementById("musicBtn").onclick=function(){music=!music;this.innerText=music?"ON":"OFF";this.style.backgroundColor=music?"green":"red";}
+document.getElementById("soundBtn").onclick=function(){sound=!sound;this.innerText=sound?"ON":"OFF";this.style.backgroundColor=sound?"green":"red";}
+document.getElementById("fps30").onclick=function(){fps=30;fps30.style.backgroundColor="green";fps60.style.backgroundColor="red";}
+document.getElementById("fps60").onclick=function(){fps=60;fps60.style.backgroundColor="green";fps30.style.backgroundColor="red";}
+document.getElementById("saveSettings").onclick=function(){savedTxt.style.display="inline";setTimeout(()=>savedTxt.style.display="none",2000);}
 
-/* GAME */
+/* MENU BUTTONS */
+document.getElementById("playBtn").onclick=startGame;
+document.getElementById("shopBtn").onclick=openShop;
+document.getElementById("settingsBtn").onclick=openSettings;
+
+/* GAME OVER BUTTONS */
+document.getElementById("restartBtn").onclick=restartGame;
+document.getElementById("backMenuBtn").onclick=()=>{location.reload();}
+
+/* GAME LOGIC */
 const canvas=document.getElementById("gameCanvas");
 const ctx=canvas.getContext("2d");
-canvas.width=window.innerWidth;canvas.height=window.innerHeight;
+canvas.width=window.innerWidth; canvas.height=window.innerHeight;
 
-let player,bullets=[],zombies=[],poisons=[],wave=1,scoreNum,HP,doubleFire=false,fireI,spawnI;
-
+let player, bullets=[], zombies=[], poisons=[], wave=1, scoreNum=0, HP=100, doubleFire=false, fireI, spawnI;
 const jetImg=new Image(); jetImg.src="jet.gif";
 const zombieImg=new Image(); zombieImg.src="zombie.png";
 const bossImg=new Image(); bossImg.src="boss.png";
 
-/* START GAME */
 function startGame(){
  if(player) return;
- running=true;
- menu.style.display="none";canvas.style.display="block";gameTop.style.display="flex";gameOver.style.display="none";
  player={x:canvas.width/2,y:canvas.height-80,HP:100};
  bullets=[];zombies=[];poisons=[];wave=1;scoreNum=0;HP=100;doubleFire=false;
  document.getElementById("hp").innerText=HP;
  document.getElementById("score").innerText=scoreNum;
+ menu.style.display="none";canvas.style.display="block";gameTop.style.display="flex";gameOver.style.display="none";
  fireI=setInterval(autoFire,200); spawnI=setInterval(spawnWave,2000); requestAnimationFrame(loop);
 }
 
@@ -182,15 +194,14 @@ function loop(){
  requestAnimationFrame(loop);
 }
 
-/* ENDGAME */
 function endGame(){
- running=false;clearInterval(fireI);clearInterval(spawnI);
+ clearInterval(fireI); clearInterval(spawnI);
  finalScore.innerText="SCORE: "+scoreNum;
  gameOver.style.display="flex";canvas.style.display="none";gameTop.style.display="none";
  if(scoreNum>data.high){data.high=scoreNum;localStorage.setItem("ZB",JSON.stringify(data));}
 }
+
 function restartGame(){player=null;startGame();}
-function backToMenu(){location.reload();}
 </script>
 </body>
 </html>
