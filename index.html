@@ -2,202 +2,190 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Zombie BiTz - Image Version</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>ZOMBIE BITZ</title>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+*{box-sizing:border-box;font-family:'Orbitron',sans-serif;text-transform:uppercase}
+body{margin:0;background:#000;overflow:hidden;color:#fff}
 
-body{
-  margin:0;
-  overflow:hidden;
-  background:#000;
-  font-family:'Orbitron',sans-serif;
+/* SPACE BACKGROUND */
+#space{position:fixed;inset:0;background:#000;overflow:hidden}
+.star{position:absolute;width:2px;height:2px;background:#fff;animation:move 6s linear infinite}
+@keyframes move{from{transform:translateY(-100vh)}to{transform:translateY(100vh)}}
+
+/* TOP BAR */
+#topBar{
+position:absolute;top:10px;left:10px;right:10px;
+display:flex;justify-content:space-between;align-items:center;z-index:10
+}
+#profile{display:flex;align-items:center;gap:10px;cursor:pointer}
+#profile img{width:40px;height:40px;border-radius:8px;border:2px solid cyan}
+#scoreBox{background:#111;padding:8px 16px;border-radius:12px}
+
+/* BUTTONS */
+.btn{
+padding:14px 22px;border-radius:14px;border:none;color:#fff;
+background:linear-gradient(135deg,#00f,#0ff);font-size:16px
+}
+.gold{background:linear-gradient(135deg,#b8860b,#ffd700)}
+.emerald{background:linear-gradient(135deg,#006400,#00ff7f)}
+.diamond{background:linear-gradient(135deg,#5f9ea0,#00ffff)}
+
+/* MENU BUTTONS */
+#menuBtns{
+position:absolute;bottom:30px;right:20px;display:flex;gap:12px;z-index:10
 }
 
-#overlay,#gameOverOverlay{
-  position:absolute;
-  top:0;left:0;width:100%;height:100%;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  z-index:10;
+/* OVERLAYS */
+.overlay{
+position:absolute;inset:0;display:none;
+justify-content:center;align-items:center;flex-direction:column;
+background:rgba(0,0,0,.85);z-index:20
 }
 
-#overlay{background:#000;color:#88ff88;}
-#gameOverOverlay{background:rgba(0,0,0,0.9);color:#ff5050;display:none;}
+/* GAME */
+canvas{display:none}
 
-#overlay h1,#gameOverOverlay h1{
-  font-family:'Press Start 2P',cursive;
-  font-size:3em;
-}
+/* SETTINGS */
+.option{margin:10px;font-size:18px}
+.option button{margin-left:10px}
 
-#overlay button,#gameOverOverlay button{
-  font-size:1.2em;
-  padding:12px 35px;
-  margin:10px;
-  border:none;
-  border-radius:10px;
-  background:#333;
-  color:#fff;
-}
-
-#restartBtn::before{content:"↻ ";}
-#menuBtn::before{content:"⌂ ";}
-
-canvas{display:block;}
-
-#fireBtn{
-  position:absolute;bottom:20px;right:20px;
-  width:80px;height:80px;
-  border:2px solid #fff;
-  border-radius:40px;
-  background:transparent;
-  color:white;
-}
-
-#leftBtn,#rightBtn{
-  position:absolute;bottom:20px;
-  width:60px;height:60px;
-  border:2px solid #fff;
-  border-radius:30px;
-  background:transparent;
-  color:white;
-}
-
-#leftBtn{left:20px;}
-#rightBtn{left:100px;}
+/* DEFEAT */
+#defeat h1{color:red;font-size:40px}
 </style>
 </head>
 
 <body>
 
-<div id="overlay">
-  <h1>Zombie BiTz</h1>
-  <button onclick="startGame()">Play</button>
-  <button onclick="quitGame()">Quit</button>
+<div id="space"></div>
+
+<div id="topBar">
+  <div id="profile" onclick="openProfile()">
+    <img id="pfp" src="" />
+    <span id="pname">PLAYER</span>
+  </div>
+  <div id="scoreBox">SCORE: <span id="score">0</span></div>
 </div>
 
-<div id="gameOverOverlay">
-  <h1>Defeat ☠</h1>
-  <p id="finalScore">Score: 0</p>
-  <button id="restartBtn" onclick="restartGame()">Restart</button>
-  <button id="menuBtn" onclick="backToMenu()">Main Menu</button>
+<div id="menuBtns">
+  <button class="btn emerald" onclick="openShop()">SHOP</button>
+  <button class="btn gold" onclick="openSettings()">SETTINGS</button>
+  <button class="btn diamond" onclick="startGame()">PLAY</button>
 </div>
 
-<canvas id="gameCanvas"></canvas>
-<button id="fireBtn">FIRE</button>
-<button id="leftBtn">◀</button>
-<button id="rightBtn">▶</button>
+<!-- PROFILE -->
+<div class="overlay" id="profileUI">
+  <h2>PROFILE</h2>
+  <input id="nameInput" placeholder="ENTER NAME">
+  <input type="file" accept="image/*" onchange="setPFP(this)">
+  <button class="btn" onclick="saveProfile()">SAVE</button>
+  <button class="btn" onclick="closeAll()">BACK</button>
+</div>
+
+<!-- SETTINGS -->
+<div class="overlay" id="settingsUI">
+  <h2>SETTINGS</h2>
+  <div class="option">SOUND <button onclick="toggleSound()">ON/OFF</button></div>
+  <div class="option">EFFECTS <button onclick="toggleFx()">ON/OFF</button></div>
+  <div class="option">FPS 
+    <button onclick="setFPS(30)">30</button>
+    <button onclick="setFPS(60)">60</button>
+  </div>
+  <button class="btn" onclick="closeAll()">BACK</button>
+</div>
+
+<!-- SHOP -->
+<div class="overlay" id="shopUI">
+  <h1>SOON...</h1>
+  <button class="btn" onclick="closeAll()">BACK</button>
+</div>
+
+<!-- DEFEAT -->
+<div class="overlay" id="defeat">
+  <h1>DEFEAT ☠</h1>
+  <p>SCORE: <span id="finalScore">0</span></p>
+  <button class="btn" onclick="startGame()">RESTART</button>
+  <button class="btn" onclick="backMenu()">MAIN MENU</button>
+</div>
+
+<canvas id="game"></canvas>
 
 <script>
-const canvas=document.getElementById('gameCanvas');
-const ctx=canvas.getContext('2d');
-canvas.width=innerWidth;
-canvas.height=innerHeight;
-
-let player={x:canvas.width/2,y:canvas.height-50,width:40,height:40,speed:7,score:0};
-let bullets=[],zombies=[];
-let gameStarted=false,enemySpawnInterval,moveDir=0;
-
-const zombieImg=new Image(); zombieImg.src='zombie.png';
-const playerImg=new Image(); playerImg.src='jet.gif';
-const bgImg=new Image(); bgImg.src='background.png';
-
-/* MOBILE CONTROLS */
-leftBtn.ontouchstart=()=>moveDir=-1;
-leftBtn.ontouchend=()=>moveDir=0;
-rightBtn.ontouchstart=()=>moveDir=1;
-rightBtn.ontouchend=()=>moveDir=0;
-fireBtn.ontouchstart=fireBullet;
-
-/* PC / LAPTOP KEYBOARD CONTROLS */
-document.addEventListener("keydown",e=>{
-  if(e.code==="ArrowLeft") moveDir=-1;
-  if(e.code==="ArrowRight") moveDir=1;
-  if(e.code==="Space") fireBullet();
-});
-
-document.addEventListener("keyup",e=>{
-  if(e.code==="ArrowLeft"||e.code==="ArrowRight") moveDir=0;
-});
-
-function gameLoop(){
-  if(!gameStarted) return;
-
-  if(bgImg.complete){
-    ctx.drawImage(bgImg,0,0,canvas.width,canvas.height);
-  }else{
-    ctx.fillStyle="#000";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-  }
-
-  player.x+=player.speed*moveDir;
-  player.x=Math.max(20,Math.min(canvas.width-20,player.x));
-  ctx.drawImage(playerImg,player.x-20,player.y-20,40,40);
-
-  bullets.forEach((b,i)=>{
-    b.y-=10;
-    ctx.fillStyle="#4fc3ff";
-    ctx.beginPath();
-    ctx.arc(b.x,b.y,5,0,Math.PI*2);
-    ctx.fill();
-
-    zombies.forEach((z,j)=>{
-      if(b.x>z.x-25&&b.x<z.x+25&&b.y>z.y-25&&b.y<z.y+25){
-        bullets.splice(i,1);
-        zombies.splice(j,1);
-        player.score+=10;
-      }
-    });
-  });
-
-  zombies.forEach(z=>{
-    z.y+=z.speed;
-    ctx.drawImage(zombieImg,z.x-25,z.y-25,50,50);
-    if(z.y>canvas.height) gameOver();
-  });
-
-  ctx.fillStyle="#fff";
-  ctx.font="20px Orbitron";
-  ctx.fillText("Score: "+player.score,10,30);
-
-  requestAnimationFrame(gameLoop);
+/* SPACE STARS */
+for(let i=0;i<80;i++){
+ let s=document.createElement("div");
+ s.className="star";
+ s.style.left=Math.random()*100+"%";
+ s.style.animationDelay=Math.random()*6+"s";
+ document.getElementById("space").appendChild(s);
 }
 
-function spawnZombie(){
-  zombies.push({
-    x:Math.random()*(canvas.width-60)+30,
-    y:-40,
-    speed:2+Math.random()
-  });
+/* STORAGE */
+let data=JSON.parse(localStorage.getItem("ZB"))||{name:"PLAYER",pfp:"",score:0}
+pname.innerText=data.name;
+if(data.pfp) pfp.src=data.pfp;
+
+/* UI */
+function closeAll(){document.querySelectorAll('.overlay').forEach(o=>o.style.display="none")}
+function openProfile(){closeAll();profileUI.style.display="flex"}
+function openSettings(){closeAll();settingsUI.style.display="flex"}
+function openShop(){closeAll();shopUI.style.display="flex"}
+function backMenu(){location.reload()}
+
+/* PROFILE */
+function saveProfile(){
+ data.name=nameInput.value||data.name;
+ localStorage.setItem("ZB",JSON.stringify(data));
+ location.reload()
+}
+function setPFP(i){
+ let r=new FileReader();
+ r.onload=()=>{data.pfp=r.result;localStorage.setItem("ZB",JSON.stringify(data))}
+ r.readAsDataURL(i.files[0])
 }
 
-function fireBullet(){
-  if(!gameStarted) return;
-  bullets.push({x:player.x,y:player.y-20});
-}
-
+/* GAME */
+let c=document.getElementById("game"),x,y,bullets=[],zombies=[],doubleFire=false;
 function startGame(){
-  gameStarted=true;
-  bullets=[];zombies=[];player.score=0;
-  overlay.style.display="none";
-  enemySpawnInterval=setInterval(spawnZombie,1000);
-  gameLoop();
+ closeAll();menuBtns.style.display="none";topBar.style.display="none";
+ c.style.display="block";c.width=innerWidth;c.height=innerHeight;
+ x=c.width/2;y=c.height-80;bullets=[];zombies=[];
+ loop();spawn()
+}
+c.addEventListener("touchmove",e=>x=e.touches[0].clientX)
+
+function loop(){
+ let g=c.getContext("2d");
+ g.clearRect(0,0,c.width,c.height);
+ g.fillStyle="cyan";g.fillRect(x-10,y-20,20,20);
+
+ bullets.forEach(b=>{b.y-=8;g.fillStyle="yellow";g.fillRect(b.x,b.y,4,8)});
+ zombies.forEach(z=>{
+  z.y+=z.s;
+  g.fillStyle="green";g.fillRect(z.x,z.y,8,8);
+  if(Math.abs(z.x-x)<15 && Math.abs(z.y-y)<15) endGame()
+ });
+
+ requestAnimationFrame(loop)
 }
 
-function gameOver(){
-  clearInterval(enemySpawnInterval);
-  gameStarted=false;
-  finalScore.innerText="Score: "+player.score;
-  gameOverOverlay.style.display="flex";
+setInterval(()=>{ // AUTO FIRE
+ bullets.push({x:x,y:y});
+ if(doubleFire) bullets.push({x:x+12,y:y});
+},200)
+
+function spawn(){
+ setInterval(()=>{
+  zombies.push({x:Math.random()*c.width,y:-10,s:3})
+ },1000)
 }
 
-function restartGame(){gameOverOverlay.style.display="none";startGame();}
-function backToMenu(){gameOverOverlay.style.display="none";overlay.style.display="flex";}
-function quitGame(){location.reload();}
+function endGame(){
+ finalScore.innerText=data.score;
+ defeat.style.display="flex"
+}
 </script>
-
 </body>
 </html>
