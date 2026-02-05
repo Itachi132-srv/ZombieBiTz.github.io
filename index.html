@@ -15,7 +15,7 @@ body{
   font-family:'Orbitron',sans-serif;
 }
 
-#overlay,#gameOverOverlay{
+#overlay,#gameOverOverlay,#shopOverlay{
   position:absolute;
   top:0;left:0;width:100%;height:100%;
   display:flex;
@@ -27,13 +27,14 @@ body{
 
 #overlay{background:#000;color:#88ff88;}
 #gameOverOverlay{background:rgba(0,0,0,0.9);color:#ff5050;display:none;}
+#shopOverlay{background:rgba(0,0,0,0.95);color:#ffd700;display:none;}
 
-#overlay h1,#gameOverOverlay h1{
+#overlay h1,#gameOverOverlay h1,#shopOverlay h1{
   font-family:'Press Start 2P',cursive;
   font-size:3em;
 }
 
-#overlay button,#gameOverOverlay button{
+#overlay button,#gameOverOverlay button,#shopOverlay button{
   font-size:1.2em;
   padding:12px 35px;
   margin:10px;
@@ -41,7 +42,15 @@ body{
   border-radius:10px;
   background:#333;
   color:#fff;
+  cursor:pointer;
+  font-family:'Press Start 2P',cursive;
 }
+
+#playBtn{background:#28a745;color:#fff;}
+#restartBtn{background:#dc3545;color:#fff;}
+#menuBtn{background:#28a745;color:#fff;}
+#shopBtn{background:#ffc107;color:#000;}
+#quitBtn{background:#6c757d;color:#fff;}
 
 #restartBtn::before{content:"↻ ";}
 #menuBtn::before{content:"⌂ ";}
@@ -73,12 +82,15 @@ canvas{display:block;}
 
 <body>
 
+<!-- MAIN MENU -->
 <div id="overlay">
   <h1>Zombie BiTz</h1>
-  <button onclick="startGame()">Play</button>
-  <button onclick="quitGame()">Quit</button>
+  <button id="playBtn" onclick="startGame()">Play</button>
+  <button id="shopBtn" onclick="openShop()">Shop</button>
+  <button id="quitBtn" onclick="quitGame()">Quit</button>
 </div>
 
+<!-- GAME OVER -->
 <div id="gameOverOverlay">
   <h1>Defeat ☠</h1>
   <p id="finalScore">Score: 0</p>
@@ -86,6 +98,17 @@ canvas{display:block;}
   <button id="menuBtn" onclick="backToMenu()">Main Menu</button>
 </div>
 
+<!-- SHOP -->
+<div id="shopOverlay">
+  <h1>🛒 Shop</h1>
+  <p id="coinDisplay">Coins: 0</p>
+  <button onclick="buyUpgrade('doubleFire',5000)">2 Fire Balls 🟡🟡 (5k)</button>
+  <button onclick="buyUpgrade('extraLife',15000)">One More Chance ❤️ (15k)</button>
+  <button onclick="buyUpgrade('sideFire',20000)">Side Fire ↘️↙️ (20k)</button>
+  <button onclick="closeShop()">Back</button>
+</div>
+
+<!-- GAME CANVAS -->
 <canvas id="gameCanvas"></canvas>
 <button id="fireBtn">FIRE</button>
 <button id="leftBtn">◀</button>
@@ -97,8 +120,22 @@ const ctx=canvas.getContext('2d');
 canvas.width=innerWidth;
 canvas.height=innerHeight;
 
-let player={x:canvas.width/2,y:canvas.height-50,width:40,height:40,speed:7,score:0};
-let bullets=[],zombies=[];
+let player={
+  x:canvas.width/2,
+  y:canvas.height-50,
+  width:40,
+  height:40,
+  speed:7,
+  score:0,
+  coins:0,
+  upgrades:{
+    doubleFire:false,
+    extraLife:false,
+    sideFire:false
+  }
+};
+
+let bullets=[],zombies=[],missed=false;
 let gameStarted=false,enemySpawnInterval,moveDir=0;
 
 const zombieImg=new Image(); zombieImg.src='zombie.png';
@@ -123,9 +160,11 @@ document.addEventListener("keyup",e=>{
   if(e.code==="ArrowLeft"||e.code==="ArrowRight") moveDir=0;
 });
 
+/* GAME LOOP */
 function gameLoop(){
   if(!gameStarted) return;
 
+  // Draw background
   if(bgImg.complete){
     ctx.drawImage(bgImg,0,0,canvas.width,canvas.height);
   }else{
@@ -133,10 +172,12 @@ function gameLoop(){
     ctx.fillRect(0,0,canvas.width,canvas.height);
   }
 
+  // Move player
   player.x+=player.speed*moveDir;
   player.x=Math.max(20,Math.min(canvas.width-20,player.x));
   ctx.drawImage(playerImg,player.x-20,player.y-20,40,40);
 
+  // Draw bullets
   bullets.forEach((b,i)=>{
     b.y-=10;
     ctx.fillStyle="#4fc3ff";
@@ -144,28 +185,52 @@ function gameLoop(){
     ctx.arc(b.x,b.y,5,0,Math.PI*2);
     ctx.fill();
 
+    // side fire
+    if(player.upgrades.sideFire){
+      ctx.beginPath();
+      ctx.arc(b.x-15,b.y,5,0,Math.PI*2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(b.x+15,b.y,5,0,Math.PI*2);
+      ctx.fill();
+    }
+
+    // Collision with zombies
     zombies.forEach((z,j)=>{
-      if(b.x>z.x-25&&b.x<z.x+25&&b.y>z.y-25&&b.y<z.y+25){
+      if(b.x>z.x-25 && b.x<z.x+25 && b.y>z.y-25 && b.y<z.y+25){
         bullets.splice(i,1);
         zombies.splice(j,1);
         player.score+=10;
+        player.coins+=5; // +5 coins per zombie
+        updateCoinsDisplay();
       }
     });
   });
 
-  zombies.forEach(z=>{
+  // Zombies move
+  zombies.forEach((z)=>{
     z.y+=z.speed;
     ctx.drawImage(zombieImg,z.x-25,z.y-25,50,50);
-    if(z.y>canvas.height) gameOver();
+    if(z.y>canvas.height){
+      if(player.upgrades.extraLife && !missed){
+        missed=true; // use extra life
+        z.y=-50;
+      } else {
+        gameOver();
+      }
+    }
   });
 
+  // Score display
   ctx.fillStyle="#fff";
   ctx.font="20px Orbitron";
   ctx.fillText("Score: "+player.score,10,30);
+  ctx.fillText("Coins: "+player.coins,10,55);
 
   requestAnimationFrame(gameLoop);
 }
 
+// Spawn zombies
 function spawnZombie(){
   zombies.push({
     x:Math.random()*(canvas.width-60)+30,
@@ -174,14 +239,20 @@ function spawnZombie(){
   });
 }
 
+// Fire bullet
 function fireBullet(){
   if(!gameStarted) return;
   bullets.push({x:player.x,y:player.y-20});
+  if(player.upgrades.doubleFire){
+    bullets.push({x:player.x-15,y:player.y-20});
+    bullets.push({x:player.x+15,y:player.y-20});
+  }
 }
 
+// GAME CONTROL FUNCTIONS
 function startGame(){
   gameStarted=true;
-  bullets=[];zombies=[];player.score=0;
+  bullets=[];zombies=[];player.score=0;missed=false;
   overlay.style.display="none";
   enemySpawnInterval=setInterval(spawnZombie,1000);
   gameLoop();
@@ -194,10 +265,33 @@ function gameOver(){
   gameOverOverlay.style.display="flex";
 }
 
-function restartGame(){gameOverOverlay.style.display="none";startGame();}
-function backToMenu(){gameOverOverlay.style.display="none";overlay.style.display="flex";}
-function quitGame(){location.reload();}
-</script>
+function restartGame(){
+  gameOverOverlay.style.display="none";
+  startGame();
+}
 
+function backToMenu(){
+  gameOverOverlay.style.display="none";
+  overlay.style.display="flex";
+}
+
+function quitGame(){window.close();}
+
+/* SHOP FUNCTIONS */
+function openShop(){overlay.style.display="none";shopOverlay.style.display="flex";}
+function closeShop(){shopOverlay.style.display="none";overlay.style.display="flex";}
+function updateCoinsDisplay(){document.getElementById('coinDisplay').innerText="Coins: "+player.coins;}
+function buyUpgrade(upgrade,cost){
+  if(player.coins>=cost && !player.upgrades[upgrade]){
+    player.coins-=cost;
+    player.upgrades[upgrade]=true;
+    updateCoinsDisplay();
+    alert(upgrade+" unlocked!");
+  } else {
+    alert("Not enough coins or already bought!");
+  }
+}
+
+</script>
 </body>
 </html>
