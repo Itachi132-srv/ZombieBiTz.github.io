@@ -4,87 +4,94 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Zombie BiTz</title>
-
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Press+Start+2P&display=swap');
+body{margin:0;background:#000;color:#fff;font-family:'Orbitron',sans-serif;overflow:hidden}
+*{box-sizing:border-box}
 
-body{
- margin:0;overflow:hidden;background:#000;
- font-family:'Orbitron',sans-serif;color:#fff
-}
+/* ===== MENU ===== */
+#menu{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10}
+#topBar{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:center}
+#profile{display:flex;align-items:center;gap:10px;cursor:pointer}
+#profile img{width:40px;height:40px;border-radius:8px;border:2px solid cyan}
+#coins{font-size:18px}
+#highScore{font-size:24px;margin:20px}
+button{padding:12px 25px;border:none;border-radius:10px;font-family:'Orbitron',sans-serif;cursor:pointer}
+#shopBtn{background:gold;color:#000}
+#playBtn{background:linear-gradient(135deg,#00c853,#b2ff59);color:#000}
+#settingsBtn{background:gray;color:#fff;margin:15px}
 
-/* ===== MAIN MENU ===== */
-#menu{
- position:absolute;inset:0;
- display:flex;flex-direction:column;
- align-items:center;justify-content:center;
- z-index:10
-}
+/* SETTINGS MENU */
+#settingsUI{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;align-items:center;background:rgba(0,0,0,.9);z-index:20}
+.option{margin:10px}
+.option button{margin-left:10px;padding:5px 12px;border-radius:6px}
 
-#topBar{
- position:absolute;top:15px;left:15px;right:15px;
- display:flex;justify-content:space-between;align-items:center
-}
+/* PROFILE MENU */
+#profileUI{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;align-items:center;background:rgba(0,0,0,.9);z-index:20}
+#profileUI input{margin:5px;padding:8px;border-radius:6px;border:none}
 
-#profile{
- display:flex;align-items:center;gap:10px;
- cursor:pointer
-}
-#profile img{
- width:40px;height:40px;border-radius:8px;
- border:2px solid #00ffff
-}
-
-#scoreBox{
- background:#111;padding:8px 16px;
- border-radius:12px
-}
-
-#title{
- font-family:'Press Start 2P',cursive;
- font-size:2.5em;margin-bottom:30px
-}
-
-#playBtn{
- font-size:1.2em;padding:14px 50px;
- border:none;border-radius:16px;
- background:#333;color:#fff
-}
-
-/* ===== GAME ===== */
+/* GAME */
 canvas{display:none}
 
-/* ===== GAME OVER ===== */
-#gameOver{
- position:absolute;inset:0;
- display:none;flex-direction:column;
- justify-content:center;align-items:center;
- background:rgba(0,0,0,.9);z-index:20
-}
-button{margin:10px}
+/* GAME HUD */
+#gameTop{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:center;z-index:10;display:none}
+#hpBox,#scoreBox{background:#111;padding:6px 14px;border-radius:10px}
+
+/* DEFEAT */
+#gameOver{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;align-items:center;background:rgba(0,0,0,.95);z-index:30}
+#gameOver h1{color:red;margin-bottom:10px}
 </style>
 </head>
-
 <body>
 
-<!-- ===== MAIN MENU ===== -->
+<!-- MAIN MENU -->
 <div id="menu">
  <div id="topBar">
-  <div id="profile">
-   <img src="jet.gif">
-   <span>PLAYER</span>
-  </div>
-  <div id="scoreBox">SCORE: <span id="score">0</span></div>
+  <div id="profile"><img id="pfp"><span id="pname">PLAYER</span></div>
+  <div id="coins">💰 0</div>
  </div>
-
- <div id="title">ZOMBIE BITZ</div>
+ <div id="highScore">HIGH SCORE: 0</div>
+ <button id="shopBtn" onclick="openShop()">SHOP</button>
  <button id="playBtn" onclick="startGame()">PLAY</button>
+ <button id="settingsBtn" onclick="openSettings()">SETTINGS</button>
 </div>
 
-<!-- ===== GAME OVER ===== -->
+<!-- SETTINGS MENU -->
+<div class="overlay" id="settingsUI">
+ <h2>SETTINGS</h2>
+ <div class="option">Music <button id="musicBtn" onclick="toggleMusic()">OFF</button></div>
+ <div class="option">Sound FX <button id="soundBtn" onclick="toggleSound()">OFF</button></div>
+ <div class="option">FPS <button id="fps30" onclick="setFPS(30)">30</button><button id="fps60" onclick="setFPS(60)">60</button></div>
+ <button onclick="saveSettings()" class="btn">SAVE</button><span id="savedTxt" style="margin-left:10px;color:lime;display:none">SAVED</span>
+ <button class="btn" onclick="closeAll()">BACK</button>
+</div>
+
+<!-- PROFILE MENU -->
+<div class="overlay" id="profileUI">
+ <h2>PROFILE</h2>
+ <input id="nameInput" placeholder="ENTER NAME">
+ <input type="file" accept="image/*" onchange="setPFP(this)">
+ <button onclick="saveProfile()" class="btn">SAVE</button>
+ <button class="btn" onclick="closeAll()">BACK</button>
+</div>
+
+<!-- SHOP -->
+<div class="overlay" id="shopUI">
+ <h2>SOON...</h2>
+ <button class="btn" onclick="closeAll()">BACK</button>
+</div>
+
+<!-- GAME HUD -->
+<div id="gameTop">
+ <div id="hpBox">HP: <span id="hp">100</span></div>
+ <div id="scoreBox">SCORE: <span id="score">0</span></div>
+</div>
+
+<!-- DEFEAT -->
 <div id="gameOver">
- <h1 style="color:red">DEFEAT ☠</h1>
+ <h1>DEFEAT ☠</h1>
  <p id="finalScore">SCORE: 0</p>
+ <p id="earnedCoins">COINS EARNED: 0</p>
  <button onclick="restartGame()">RESTART</button>
  <button onclick="backToMenu()">MAIN MENU</button>
 </div>
@@ -92,110 +99,131 @@ button{margin:10px}
 <canvas id="gameCanvas"></canvas>
 
 <script>
+/* ===== STORAGE ===== */
+let data=JSON.parse(localStorage.getItem("ZB"))||{name:"PLAYER",pfp:"",high:0,coins:0};
+pname.innerText=data.name;
+if(data.pfp)pfp.src=data.pfp;
+document.getElementById("coins").innerText="💰 "+data.coins;
+document.getElementById("highScore").innerText="HIGH SCORE: "+data.high;
+
+/* ===== UI FUNCTIONS ===== */
+function closeAll(){
+ document.querySelectorAll('.overlay').forEach(o=>o.style.display="none");
+}
+function openSettings(){closeAll();settingsUI.style.display="flex";}
+function openShop(){closeAll();shopUI.style.display="flex";}
+function openProfile(){closeAll();profileUI.style.display="flex";}
+
+/* ===== PROFILE ===== */
+function saveProfile(){
+ let name=nameInput.value||data.name;
+ data.name=name;
+ localStorage.setItem("ZB",JSON.stringify(data));
+ location.reload();
+}
+function setPFP(file){
+ let reader=new FileReader();
+ reader.onload=()=>{data.pfp=reader.result;localStorage.setItem("ZB",JSON.stringify(data));}
+ reader.readAsDataURL(file.files[0])
+}
+
+/* ===== SETTINGS ===== */
+let music=false,sound=false,fps=60;
+function toggleMusic(){music=!music;musicBtn.innerText=music?"ON":"OFF";musicBtn.style.backgroundColor=music?"green":"red";}
+function toggleSound(){sound=!sound;soundBtn.innerText=sound?"ON":"OFF";soundBtn.style.backgroundColor=sound?"green":"red";}
+function setFPS(v){fps=v;fps30.style.backgroundColor=fps===30?"green":"red";fps60.style.backgroundColor=fps===60?"green":"red";}
+function saveSettings(){savedTxt.style.display="inline";setTimeout(()=>savedTxt.style.display="none",2000);}
+
+/* ===== GAME ===== */
 const canvas=document.getElementById("gameCanvas");
 const ctx=canvas.getContext("2d");
 canvas.width=innerWidth;canvas.height=innerHeight;
 
+let player,bullets,zombies,poisons,coinsCollected;
+let running=false,fireI,spawnI,doubleFire=false;
+
 const jetImg=new Image(); jetImg.src="jet.gif";
 const zombieImg=new Image(); zombieImg.src="zombie.png";
 
-let player,bullets,zombies,poisons,powers;
-let running=false,doubleFire=false;
-let fireI,spawnI;
-
 function startGame(){
- menu.style.display="none";
- gameOver.style.display="none";
- canvas.style.display="block";
-
- player={x:canvas.width/2,y:canvas.height-80};
- bullets=[];zombies=[];poisons=[];powers=[];
- doubleFire=false;
- score.innerText=0;
+ if(running)return;
  running=true;
+ menu.style.display="none";canvas.style.display="block";gameTop.style.display="flex";gameOver.style.display="none";
+
+ player={x:canvas.width/2,y:canvas.height-80,HP:100};
+ bullets=[];zombies=[];poisons=[];coinsCollected=0;doubleFire=false;
+ document.getElementById("hp").innerText=player.HP;
+ document.getElementById("score").innerText=0;
 
  fireI=setInterval(autoFire,200);
  spawnI=setInterval(spawnZombie,1200);
  requestAnimationFrame(loop);
 }
 
-canvas.addEventListener("touchmove",e=>{
- player.x=e.touches[0].clientX;
-});
+canvas.addEventListener("mousemove",e=>player.x=e.clientX);
+canvas.addEventListener("touchmove",e=>player.x=e.touches[0].clientX);
 
 function autoFire(){
- if(!running) return;
- bullets.push({x:player.x,y:player.y});
- if(doubleFire) bullets.push({x:player.x+14,y:player.y});
+ if(!running)return;
+ for(let i=0;i<(doubleFire?2:1);i++) bullets.push({x:player.x+i*10-5,y:player.y});
 }
 
 function spawnZombie(){
- zombies.push({
-  x:Math.random()*(canvas.width-50)+25,
-  y:-40,speed:2+Math.random()*1.5,t:0
- });
+ zombies.push({x:Math.random()*(canvas.width-50)+25,y:-40,hp:50,t:0});
 }
 
 function loop(){
- if(!running) return;
+ if(!running)return;
  ctx.clearRect(0,0,canvas.width,canvas.height);
 
+ // PLAYER
  ctx.drawImage(jetImg,player.x-20,player.y-20,40,40);
 
+ // BULLETS
  bullets.forEach((b,i)=>{
-  b.y-=10;
-  ctx.fillStyle="yellow";
-  ctx.fillRect(b.x,b.y,4,8);
+  b.y-=10;ctx.fillStyle="yellow";ctx.fillRect(b.x,b.y,4,8);
   if(b.y<0) bullets.splice(i,1);
  });
 
+ // ZOMBIES
  zombies.forEach((z,zi)=>{
-  z.y+=z.speed;
+  z.y+=2; z.t++;
   ctx.drawImage(zombieImg,z.x-25,z.y-25,50,50);
-  z.t++;
-  if(z.t>90){poisons.push({x:z.x,y:z.y});z.t=0;}
-  if(z.y>canvas.height) endGame();
 
   bullets.forEach((b,bi)=>{
-   if(b.x>z.x-25&&b.x<z.x+25&&b.y>z.y-25&&b.y<z.y+25){
-    bullets.splice(bi,1);
-    zombies.splice(zi,1);
-    score.innerText=parseInt(score.innerText)+10;
-    if(Math.random()<0.3)powers.push({x:z.x,y:z.y});
+   if(Math.abs(b.x-z.x)<25 && Math.abs(b.y-z.y)<25){
+    z.hp-=25; bullets.splice(bi,1);
+    if(z.hp<=0){zombies.splice(zi,1);coinsCollected+=10;document.getElementById("coins").innerText="💰 "+(data.coins+coinsCollected);doubleFire=true;}
    }
   });
+
+  if(z.t>90){poisons.push({x:z.x,y:z.y});z.t=0;}
+  if(Math.abs(player.x-z.x)<25 && Math.abs(player.y-z.y)<25){player.HP-=35;document.getElementById("hp").innerText=player.HP;poisons.splice(0,1);}
+  if(z.y>canvas.height)player.HP-=35;
  });
 
- poisons.forEach(p=>{
-  p.y+=5;
-  ctx.fillStyle="lime";
-  ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);ctx.fill();
-  if(Math.abs(p.x-player.x)<15&&Math.abs(p.y-player.y)<15) endGame();
+ // POISONS
+ poisons.forEach((p,pi)=>{
+  p.y+=5;ctx.fillStyle="lime";ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);ctx.fill();
+  if(Math.abs(player.x-p.x)<15 && Math.abs(player.y-p.y)<15){player.HP-=35;document.getElementById("hp").innerText=player.HP;poisons.splice(pi,1);}
  });
 
- powers.forEach((pw,pi)=>{
-  pw.y+=3;
-  ctx.fillStyle="cyan";
-  ctx.beginPath();ctx.arc(pw.x,pw.y,8,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle="#000";ctx.fillText("+",pw.x-3,pw.y+4);
-  if(Math.abs(pw.x-player.x)<15&&Math.abs(pw.y-player.y)<15){
-   doubleFire=true;powers.splice(pi,1);
-  }
- });
+ if(player.HP<=0)endGame();
 
  requestAnimationFrame(loop);
 }
 
 function endGame(){
- running=false;
- clearInterval(fireI);clearInterval(spawnI);
- finalScore.innerText="SCORE: "+score.innerText;
- gameOver.style.display="flex";
+ running=false;clearInterval(fireI);clearInterval(spawnI);
+ finalScore.innerText=document.getElementById("score").innerText;
+ coinsEarned.innerText="COINS EARNED: "+coinsCollected;
+ data.coins+=coinsCollected;if(parseInt(document.getElementById("score").innerText)>data.high)data.high=parseInt(document.getElementById("score").innerText);
+ localStorage.setItem("ZB",JSON.stringify(data));
+ gameOver.style.display="flex";canvas.style.display="none";gameTop.style.display="none";
 }
 
-function restartGame(){startGame()}
-function backToMenu(){location.reload()}
+function restartGame(){startGame();}
+function backToMenu(){location.reload();}
 </script>
-
 </body>
 </html>
