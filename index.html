@@ -38,15 +38,15 @@ button{
   margin:10px;
   border:none;
   border-radius:10px;
-  background:#444; /* changed button color except Play buttons */
+  background:#444;
   color:#fff;
   cursor:pointer;
+  transition: all 0.2s ease;
 }
-
-#restartBtn::before{content:"↻ ";}
-#menuBtn::before{content:"⌂ ";}
-
-canvas{display:block;}
+button:hover{
+  background:#4fc3ff;
+  color:#000;
+}
 
 #fireBtn{
   position:absolute;bottom:20px;right:20px;
@@ -55,6 +55,9 @@ canvas{display:block;}
   border-radius:40px;
   background:transparent;
   color:white;
+  font-family:Arial, sans-serif; /* NORMAL FONT */
+  font-weight:normal;
+  font-size:18px;
 }
 
 #leftBtn,#rightBtn{
@@ -82,6 +85,11 @@ canvas{display:block;}
   border-radius:12px;
   text-align:center;
   width:120px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.jet:hover{
+  transform:scale(1.1);
+  box-shadow:0 0 10px #4fc3ff;
 }
 
 .jet img{width:80px;height:80px;}
