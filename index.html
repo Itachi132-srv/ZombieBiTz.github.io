@@ -16,20 +16,32 @@ body{
   color:#fff;
 }
 
-/* Overlays */
+/* Canvas always at bottom */
+canvas{
+  display:block;
+  background:#111;
+  position:fixed;
+  top:0;
+  left:0;
+  z-index:1;
+}
+
+/* Overlays above everything */
 #overlay,#gameOverOverlay,#shopOverlay{
-  position:absolute;
+  position:fixed;
   top:0;left:0;width:100%;height:100%;
   display:flex;
   flex-direction:column;
   justify-content:center;
   align-items:center;
   z-index:100;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(6px);
   background:rgba(0,0,0,0.85);
+  overflow-x:hidden;
+  overflow-y:auto;
 }
 
+/* Titles */
 h1{
   font-family:'Press Start 2P',cursive;
   font-size:3em;
@@ -38,6 +50,7 @@ h1{
   text-shadow:0 0 15px #4fc3ff,0 0 20px #00bcd4;
 }
 
+/* Buttons */
 button{
   font-family:'Orbitron',sans-serif;
   font-size:1.2em;
@@ -60,18 +73,13 @@ button:active{
   transform:scale(0.98);
 }
 
+/* Special buttons */
 #restartBtn::before{content:"↻ ";}
 #menuBtn::before{content:"⌂ ";}
 
-/* Canvas */
-canvas{
-  display:block;
-  background:#111;
-}
-
 /* FIRE Button */
 #fireBtn{
-  position:absolute;
+  position:fixed;
   bottom:20px;right:20px;
   width:80px;height:80px;
   border:2px solid #fff;
@@ -82,7 +90,7 @@ canvas{
   font-weight:normal;
   font-size:18px;
   cursor:pointer;
-  transition: all 0.2s ease;
+  z-index:50;
 }
 #fireBtn:hover{
   color:#4fc3ff;
@@ -91,17 +99,19 @@ canvas{
 
 /* Movement Buttons */
 #leftBtn,#rightBtn{
-  position:absolute;bottom:20px;
+  position:fixed;
+  bottom:20px;
   width:60px;height:60px;
   border:2px solid #fff;
   border-radius:50%;
   background:transparent;
   color:white;
+  z-index:50;
 }
 #leftBtn{left:20px;}
 #rightBtn{left:100px;}
 
-/* Coins & Score */
+/* Coins & Score display */
 #coinDisplay{
   font-size:1.2em;
   padding:6px 12px;
@@ -125,6 +135,8 @@ canvas{
   flex-wrap:nowrap;
   overflow-x:auto;
   padding-bottom:20px;
+  width:100%;
+  justify-content:flex-start;
 }
 .jet{
   flex:0 0 auto;
@@ -149,6 +161,11 @@ canvas{
   font-size:14px;
   color:#ffd54f;
   margin:5px 0;
+}
+
+/* Overlay text spacing fix */
+#overlay p,#gameOverOverlay p{
+  margin:5px 0 20px;
 }
 </style>
 </head>
