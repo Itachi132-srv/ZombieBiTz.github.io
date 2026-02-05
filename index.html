@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Zombie BiTz - Pro Version</title>
+<title>Zombie BiTz - Pro Mini Caps</title>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Press+Start+2P&display=swap');
@@ -13,6 +13,7 @@ body{
   overflow:hidden;
   background:#000;
   font-family:'Orbitron',sans-serif;
+  text-transform: lowercase; /* mini caps effect */
 }
 
 #overlay,#gameOverOverlay,#shopOverlay{
@@ -28,41 +29,38 @@ body{
 #gameOverOverlay{background:rgba(0,0,0,0.95);color:#ff5050;display:none;}
 #shopOverlay{background:rgba(10,10,10,0.98);color:#ffd700;display:none;}
 
-#overlay h1,#gameOverOverlay h1,#shopOverlay h1{
+h1{
   font-family:'Press Start 2P',cursive;
   font-size:3em;
   margin-bottom:20px;
+  text-transform: lowercase;
 }
 
-#overlay button,#gameOverOverlay button,#shopOverlay button{
+button{
+  font-family:'Press Start 2P',cursive;
+  text-transform: lowercase;
   font-size:1.2em;
   padding:12px 35px;
   margin:10px;
   border:none;
   border-radius:10px;
-  background:#222;
-  color:#fff;
   cursor:pointer;
-  font-family:'Press Start 2P',cursive;
-  transition: 0.3s;
+  transition:0.3s;
 }
 
-#overlay button:hover,#gameOverOverlay button:hover,#shopOverlay button:hover{
-  transform: scale(1.05);
-  background:#444;
-}
+button:hover{transform: scale(1.05);}
 
-#playBtn{background:#28a745;color:#fff;}
-#restartBtn{background:#dc3545;color:#fff;}
-#menuBtn{background:#28a745;color:#fff;}
+#playBtn, #menuBtn{background:#28a745;color:#fff;}
 #shopBtn{background:#ffc107;color:#000;}
 #quitBtn{background:#6c757d;color:#fff;}
+#restartBtn{background:#dc3545;color:#fff;}
 
 #restartBtn::before{content:"↻ ";}
 #menuBtn::before{content:"⌂ ";}
 
 canvas{display:block;}
 
+/* Controls */
 #fireBtn{
   position:absolute;bottom:20px;right:20px;
   width:80px;height:80px;
@@ -72,7 +70,6 @@ canvas{display:block;}
   color:white;
   font-size:18px;
 }
-
 #leftBtn,#rightBtn{
   position:absolute;bottom:20px;
   width:60px;height:60px;
@@ -82,23 +79,60 @@ canvas{display:block;}
   color:white;
   font-size:24px;
 }
-
 #leftBtn{left:20px;}
 #rightBtn{left:100px;}
 
-.shop-button{
-  display:block;
-  margin:8px 0;
-  padding:12px 25px;
-  background:#333;
+/* pause button */
+#pauseBtn{
+  position:absolute;
+  top:20px; right:20px;
+  width:50px;height:50px;
+  border:2px solid #fff;
   border-radius:10px;
-  color:#ffd700;
-  font-family:'Press Start 2P',cursive;
+  background:#222;
+  color:#fff;
+  font-size:24px;
   cursor:pointer;
-  transition:0.3s;
+  z-index:15;
 }
 
-.shop-button:hover{background:#555;}
+/* Shop card style */
+.shop-card{
+  display:none;
+  background: #ff7f50;
+  border-radius: 15px;
+  width: 300px;
+  padding: 20px;
+  text-align:center;
+  animation: pop 0.5s ease;
+}
+
+.shop-card h2{
+  margin-bottom:10px;
+  text-transform: lowercase;
+}
+
+.shop-card p{
+  font-size:0.9em;
+  color:#fff;
+  margin-bottom:15px;
+}
+
+/* arrow buttons for shop navigation */
+.shop-arrow{
+  font-size:2em;
+  cursor:pointer;
+  color:#fff;
+  margin:0 15px;
+  user-select:none;
+  transition:0.3s;
+}
+.shop-arrow:hover{color:#ff7f50;}
+
+@keyframes pop{
+  0%{transform:scale(0);}
+  100%{transform:scale(1);}
+}
 </style>
 </head>
 
@@ -106,36 +140,55 @@ canvas{display:block;}
 
 <!-- MAIN MENU -->
 <div id="overlay">
-  <h1>Zombie BiTz</h1>
-  <p id="highScoreDisplay">High Score: 0</p>
-  <button id="playBtn" onclick="startGame()">Play</button>
-  <button id="shopBtn" onclick="openShop()">🛍 Shop</button>
-  <button id="quitBtn" onclick="quitGame()">Quit</button>
+  <h1>zombie bitz</h1>
+  <p id="highScoreDisplay">high score: 0</p>
+  <button id="playBtn" onclick="startGame()">play</button>
+  <button id="shopBtn" onclick="openShop()">shop</button>
+  <button id="quitBtn" onclick="quitGame()">quit</button>
 </div>
 
 <!-- GAME OVER -->
 <div id="gameOverOverlay">
-  <h1>☠ Defeat ☠</h1>
-  <p id="finalScore">Score: 0</p>
-  <button id="restartBtn" onclick="restartGame()">Restart</button>
-  <button id="menuBtn" onclick="backToMenu()">Main Menu</button>
+  <h1><b>☠</b> defeat <b>☠</b></h1>
+  <p id="finalScore">score: 0</p>
+  <button id="restartBtn" onclick="restartGame()">restart</button>
+  <button id="menuBtn" onclick="backToMenu()">main menu</button>
 </div>
 
 <!-- SHOP -->
 <div id="shopOverlay">
-  <h1>⚡ Shop ⚡</h1>
-  <p id="coinDisplay">Coins: 0</p>
-  <button class="shop-button" onclick="buyUpgrade('doubleFire',5000)">⚔ Double Fire (5k)</button>
-  <button class="shop-button" onclick="buyUpgrade('extraLife',15000)">❤️ Extra Life (15k)</button>
-  <button class="shop-button" onclick="buyUpgrade('sideFire',20000)">↘↙ Side Fire (20k)</button>
-  <button class="shop-button" onclick="closeShop()">Back</button>
+  <h1>shop</h1>
+  <p id="coinDisplay">coins: 0</p>
+  <div style="display:flex; align-items:center;">
+    <span class="shop-arrow" onclick="prevCard()">⬅️</span>
+    <div id="shopCardsContainer">
+      <div class="shop-card" data-upgrade="doubleFire" data-cost="5000">
+        <h2>double fire</h2>
+        <p>fire 3 bullets at once</p>
+        <button class="shop-button" onclick="buyUpgrade('doubleFire',5000)">buy (5000)</button>
+      </div>
+      <div class="shop-card" data-upgrade="extraLife" data-cost="15000">
+        <h2>extra life</h2>
+        <p>survive 1 zombie miss</p>
+        <button class="shop-button" onclick="buyUpgrade('extraLife',15000)">buy (15000)</button>
+      </div>
+      <div class="shop-card" data-upgrade="sideFire" data-cost="20000">
+        <h2>side fire</h2>
+        <p>bullets also fire sideways</p>
+        <button class="shop-button" onclick="buyUpgrade('sideFire',20000)">buy (20000)</button>
+      </div>
+    </div>
+    <span class="shop-arrow" onclick="nextCard()">➡️</span>
+  </div>
+  <button class="shop-button" onclick="closeShop()">back</button>
 </div>
 
 <!-- GAME CANVAS -->
 <canvas id="gameCanvas"></canvas>
-<button id="fireBtn">FIRE</button>
+<button id="fireBtn">fire</button>
 <button id="leftBtn">◀</button>
 <button id="rightBtn">▶</button>
+<button id="pauseBtn" onclick="togglePause()">||</button>
 
 <script>
 const canvas=document.getElementById('gameCanvas');
@@ -151,29 +204,25 @@ let player={
   speed:7,
   score:0,
   coins:0,
-  upgrades:{
-    doubleFire:false,
-    extraLife:false,
-    sideFire:false
-  }
+  upgrades:{doubleFire:false, extraLife:false, sideFire:false}
 };
 
 let bullets=[],zombies=[],missed=false;
-let gameStarted=false,enemySpawnInterval,moveDir=0;
+let gameStarted=false,enemySpawnInterval,moveDir=0,paused=false;
 let highScore=0;
 
 const zombieImg=new Image(); zombieImg.src='zombie.png';
-const playerImg=new Image(); playerImg.src='jet.gif';
+const playerImg=new Image(); playerImg.src='jet.png';
 const bgImg=new Image(); bgImg.src='background.png';
 
-/* MOBILE CONTROLS */
+/* mobile controls */
 leftBtn.ontouchstart=()=>moveDir=-1;
 leftBtn.ontouchend=()=>moveDir=0;
 rightBtn.ontouchstart=()=>moveDir=1;
 rightBtn.ontouchend=()=>moveDir=0;
 fireBtn.ontouchstart=fireBullet;
 
-/* PC KEYBOARD CONTROLS */
+/* PC keyboard */
 document.addEventListener("keydown",e=>{
   if(e.code==="ArrowLeft") moveDir=-1;
   if(e.code==="ArrowRight") moveDir=1;
@@ -184,80 +233,74 @@ document.addEventListener("keyup",e=>{
   if(e.code==="ArrowLeft"||e.code==="ArrowRight") moveDir=0;
 });
 
+/* pause/resume */
+function togglePause(){
+  paused=!paused;
+  if(paused){
+    clearInterval(enemySpawnInterval);
+  }else{
+    enemySpawnInterval=setInterval(spawnZombie,1000);
+    gameLoop();
+  }
+}
+
 /* GAME LOOP */
 function gameLoop(){
-  if(!gameStarted) return;
+  if(!gameStarted || paused) return;
 
-  // background
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
   if(bgImg.complete) ctx.drawImage(bgImg,0,0,canvas.width,canvas.height);
   else { ctx.fillStyle="#000"; ctx.fillRect(0,0,canvas.width,canvas.height); }
 
-  // move player
   player.x+=player.speed*moveDir;
   player.x=Math.max(20,Math.min(canvas.width-20,player.x));
   ctx.drawImage(playerImg,player.x-20,player.y-20,40,40);
 
-  // bullets
   bullets.forEach((b,i)=>{
     b.y-=10;
-    ctx.fillStyle="#4fc3ff";
-    ctx.beginPath();
-    ctx.arc(b.x,b.y,5,0,Math.PI*2);
-    ctx.fill();
+    ctx.fillStyle="#ffa500"; // orange bullets
+    ctx.beginPath(); ctx.arc(b.x,b.y,5,0,Math.PI*2); ctx.fill();
 
-    // side fire
     if(player.upgrades.sideFire){
       ctx.beginPath(); ctx.arc(b.x-15,b.y,5,0,Math.PI*2); ctx.fill();
       ctx.beginPath(); ctx.arc(b.x+15,b.y,5,0,Math.PI*2); ctx.fill();
     }
 
-    // collision
     zombies.forEach((z,j)=>{
       if(b.x>z.x-25 && b.x<z.x+25 && b.y>z.y-25 && b.y<z.y+25){
         bullets.splice(i,1);
         zombies.splice(j,1);
-        player.score+=10;
-        player.coins+=5;
+        player.score+=10; player.coins+=5;
         updateCoinsDisplay();
       }
     });
   });
 
-  // zombies move
   zombies.forEach((z)=>{
     z.y+=z.speed;
     ctx.drawImage(zombieImg,z.x-25,z.y-25,50,50);
     if(z.y>canvas.height){
-      if(player.upgrades.extraLife && !missed){
-        missed=true; // use extra life
-        z.y=-50;
-      } else {
-        gameOver();
-      }
+      if(player.upgrades.extraLife && !missed){ missed=true; z.y=-50; }
+      else { gameOver(); }
     }
   });
 
-  // score display
   ctx.fillStyle="#fff";
   ctx.font="20px Orbitron";
-  ctx.fillText("Score: "+player.score,10,30);
-  ctx.fillText("Coins: "+player.coins,10,55);
+  ctx.fillText("score: "+player.score,10,30);
+  ctx.fillText("coins: "+player.coins,10,55);
 
   requestAnimationFrame(gameLoop);
 }
 
-/* spawn zombie */
+/* spawn zombies */
 function spawnZombie(){
-  zombies.push({
-    x:Math.random()*(canvas.width-60)+30,
-    y:-40,
-    speed:2+Math.random()
-  });
+  if(!paused) zombies.push({x:Math.random()*(canvas.width-60)+30, y:-40, speed:2+Math.random()});
 }
 
 /* fire bullet */
-function fireBullet(){
-  if(!gameStarted) return;
+function fireBullet(){ if(!gameStarted || paused) return;
   bullets.push({x:player.x,y:player.y-20});
   if(player.upgrades.doubleFire){
     bullets.push({x:player.x-15,y:player.y-20});
@@ -267,8 +310,7 @@ function fireBullet(){
 
 /* GAME CONTROLS */
 function startGame(){
-  gameStarted=true;
-  bullets=[]; zombies=[]; player.score=0; missed=false;
+  gameStarted=true; bullets=[]; zombies=[]; player.score=0; missed=false; paused=false;
   overlay.style.display="none";
   enemySpawnInterval=setInterval(spawnZombie,1000);
   gameLoop();
@@ -277,7 +319,7 @@ function startGame(){
 function gameOver(){
   clearInterval(enemySpawnInterval);
   gameStarted=false;
-  finalScore.innerText="Score: "+player.score;
+  finalScore.innerText="score: "+player.score;
   if(player.score>highScore) highScore=player.score;
   gameOverOverlay.style.display="flex";
 }
@@ -290,35 +332,34 @@ function restartGame(){
 function backToMenu(){
   gameOverOverlay.style.display="none";
   overlay.style.display="flex";
-  highScoreDisplay.innerText="High Score: "+highScore;
+  highScoreDisplay.innerText="high score: "+highScore;
 }
 
 function quitGame(){window.close();}
 
-/* SHOP */
-function openShop(){overlay.style.display="none";shopOverlay.style.display="flex";}
+/* SHOP LOGIC */
+let currentCard=0;
+const shopCards=document.querySelectorAll('.shop-card');
+function showCard(index){
+  shopCards.forEach((c,i)=>c.style.display=(i===index)?'block':'none');
+}
+showCard(currentCard);
+function prevCard(){ currentCard=(currentCard-1+shopCards.length)%shopCards.length; showCard(currentCard);}
+function nextCard(){ currentCard=(currentCard+1)%shopCards.length; showCard(currentCard);}
+function openShop(){overlay.style.display="none";shopOverlay.style.display="flex";showCard(currentCard);}
 function closeShop(){shopOverlay.style.display="none";overlay.style.display="flex";}
-function updateCoinsDisplay(){document.getElementById('coinDisplay').innerText="Coins: "+player.coins;}
+function updateCoinsDisplay(){document.getElementById('coinDisplay').innerText="coins: "+player.coins;}
 
 function buyUpgrade(upgrade,cost){
   if(player.coins>=cost && !player.upgrades[upgrade]){
-    player.coins-=cost;
-    player.upgrades[upgrade]=true;
-    updateCoinsDisplay();
-    let msg="";
-    switch(upgrade){
-      case 'doubleFire': msg="⚔ Double Fire unlocked!"; break;
-      case 'extraLife': msg="❤️ Extra Life activated!"; break;
-      case 'sideFire': msg="↘↙ Side Fire unlocked!"; break;
-    }
+    player.coins-=cost; player.upgrades[upgrade]=true; updateCoinsDisplay();
+    let msg=""; if(upgrade==='doubleFire') msg="double fire unlocked!";
+    if(upgrade==='extraLife') msg="extra life activated!";
+    if(upgrade==='sideFire') msg="side fire unlocked!";
     alert(msg);
-  } else if(player.upgrades[upgrade]){
-    alert("Already unlocked!");
-  } else {
-    alert("💸 Not enough coins!");
-  }
+  } else if(player.upgrades[upgrade]) alert("already unlocked!");
+  else alert("not enough coins!");
 }
-
 </script>
 </body>
 </html>
