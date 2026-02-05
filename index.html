@@ -3,100 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Zombie BiTz - Image Version</title>
-
+<title>Zombie BiTz - Pro Fix</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Press+Start+2P&display=swap');
 
-body{
-  margin:0;
-  overflow:hidden;
-  background:#000;
-  font-family:'Orbitron',sans-serif;
-}
+body{margin:0;overflow:hidden;background:#000;font-family:'Orbitron',sans-serif;color:#fff;}
+canvas{display:block;position:fixed;top:0;left:0;z-index:1;background:#000;}
 
 #overlay,#gameOverOverlay,#shopOverlay{
-  position:absolute;
-  top:0;left:0;width:100%;height:100%;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  z-index:10;
+  position:fixed;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;z-index:100;background:rgba(0,0,0,0.85);
+  overflow-x:hidden;overflow-y:auto;padding:20px;
 }
+h1{font-family:'Press Start 2P',cursive;font-size:3em;margin-bottom:20px;color:#4fc3ff;text-shadow:0 0 15px #4fc3ff,0 0 20px #00bcd4;}
+button{font-family:'Orbitron',sans-serif;font-size:1.2em;padding:12px 35px;margin:10px;border:none;border-radius:12px;background:#222;color:#fff;cursor:pointer;transition:all 0.2s;}
+button:hover{background:#4fc3ff;color:#000;}
+#fireBtn{position:fixed;bottom:20px;right:20px;width:80px;height:80px;border:2px solid #fff;border-radius:50%;background:transparent;color:white;font-family:Arial,sans-serif;font-weight:normal;font-size:18px;z-index:50;cursor:pointer;}
+#leftBtn,#rightBtn{position:fixed;bottom:20px;width:60px;height:60px;border:2px solid #fff;border-radius:50%;background:transparent;color:white;z-index:50;}
+#leftBtn{left:20px;}#rightBtn{left:100px;}
 
-#overlay{background:#000;color:#88ff88;}
-#gameOverOverlay{background:rgba(0,0,0,0.9);color:#ff5050;display:none;}
-#shopOverlay{background:#000;color:#4fc3ff;display:none;overflow-x:auto;padding:20px;}
-
-h1{font-family:'Press Start 2P',cursive;font-size:3em;margin-bottom:20px;}
-
-button{
-  font-family:'Orbitron',sans-serif;
-  font-size:1.2em;
-  padding:12px 35px;
-  margin:10px;
-  border:none;
-  border-radius:10px;
-  background:#444;
-  color:#fff;
-  cursor:pointer;
-  transition: all 0.2s ease;
-}
-button:hover{
-  background:#4fc3ff;
-  color:#000;
-}
-
-#fireBtn{
-  position:absolute;bottom:20px;right:20px;
-  width:80px;height:80px;
-  border:2px solid #fff;
-  border-radius:40px;
-  background:transparent;
-  color:white;
-  font-family:Arial, sans-serif; /* NORMAL FONT */
-  font-weight:normal;
-  font-size:18px;
-}
-
-#leftBtn,#rightBtn{
-  position:absolute;bottom:20px;
-  width:60px;height:60px;
-  border:2px solid #fff;
-  border-radius:30px;
-  background:transparent;
-  color:white;
-}
-
-#leftBtn{left:20px;}
-#rightBtn{left:100px;}
-
-.shopRow{
-  display:flex;
-  gap:20px;
-  flex-wrap:nowrap;
-}
-
-.jet{
-  flex:0 0 auto;
-  border:2px solid #4fc3ff;
-  padding:15px;
-  border-radius:12px;
-  text-align:center;
-  width:120px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.jet:hover{
-  transform:scale(1.1);
-  box-shadow:0 0 10px #4fc3ff;
-}
-
-.jet img{width:80px;height:80px;}
-.price{color:#ffd54f;margin-top:8px;font-size:14px;}
+#coinDisplay{font-size:1.2em;padding:6px 12px;background:rgba(0,0,0,0.7);border-radius:8px;border:2px solid #4fc3ff;color:#ffd54f;margin-bottom:15px;box-shadow:0 0 10px #ffd54f;}
+.shopRow{display:flex;gap:25px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:20px;width:100%;justify-content:flex-start;}
+.jet{flex:0 0 auto;border:2px solid #4fc3ff;border-radius:12px;padding:15px;text-align:center;width:140px;background:rgba(0,0,0,0.8);transition:all 0.2s;}
+.jet:hover{transform:scale(1.1);box-shadow:0 0 15px #4fc3ff;}
+.jet img{width:80px;height:80px;margin-bottom:10px;}
+.price{font-size:14px;color:#ffd54f;margin:5px 0;}
 </style>
 </head>
-
 <body>
 
 <div id="overlay">
@@ -109,26 +42,7 @@ button:hover{
 
 <div id="shopOverlay">
   <h1>Jet Shop</h1>
-  <div class="shopRow">
-    <div class="jet" data-jet="slime" data-price="5000">
-      <img src="slime.gif">
-      <div>Slime Jet</div>
-      <div class="price">5,000 Coins</div>
-      <button onclick="buyJet('slime',5000)">Buy</button>
-    </div>
-    <div class="jet" data-jet="fire" data-price="12000">
-      <img src="fire.png">
-      <div>Fire Jet</div>
-      <div class="price">12,000 Coins</div>
-      <button onclick="buyJet('fire',12000)">Buy</button>
-    </div>
-    <div class="jet" data-jet="shardex" data-price="70000">
-      <img src="shardex.png">
-      <div>Shardex Jet</div>
-      <div class="price">70,000 Coins</div>
-      <button onclick="buyJet('shardex',70000)">Buy</button>
-    </div>
-  </div>
+  <div class="shopRow" id="shopRow"></div>
   <button onclick="closeShop()">Back</button>
 </div>
 
@@ -147,72 +61,48 @@ button:hover{
 <script>
 const canvas=document.getElementById('gameCanvas');
 const ctx=canvas.getContext('2d');
-canvas.width=innerWidth;
-canvas.height=innerHeight;
+canvas.width=innerWidth; canvas.height=innerHeight;
 
 // Coins & Jet system
 let coins=parseInt(localStorage.getItem("coins"))||0;
-let selectedJet=localStorage.getItem("jet")||"jet";
+let selectedJet=localStorage.getItem("jet")||"slime";
 coinDisplay.innerText=coins;
 
 let player={x:canvas.width/2,y:canvas.height-50,width:40,height:40,speed:7,score:0};
-let bullets=[],zombies=[];
-let gameStarted=false,enemySpawnInterval,moveDir=0;
+let bullets=[],zombies=[],gameStarted=false,enemySpawnInterval,moveDir=0;
 
 const zombieImg=new Image(); zombieImg.src='zombie.png';
 const playerImg=new Image();
 const bgImg=new Image(); bgImg.src='background.png';
 
-function updatePlayerImg(){
-  playerImg.src = selectedJet + ".png"; // ← yahan tum player ka PNG name rakh sakte ho
-}
+function updatePlayerImg(){ playerImg.src = selectedJet + ".png"; }
 updatePlayerImg();
 
-/* MOBILE CONTROLS */
-leftBtn.ontouchstart=()=>moveDir=-1;
-leftBtn.ontouchend=()=>moveDir=0;
-rightBtn.ontouchstart=()=>moveDir=1;
-rightBtn.ontouchend=()=>moveDir=0;
+/* Mobile controls */
+leftBtn.ontouchstart=()=>moveDir=-1; leftBtn.ontouchend=()=>moveDir=0;
+rightBtn.ontouchstart=()=>moveDir=1; rightBtn.ontouchend=()=>moveDir=0;
 fireBtn.ontouchstart=fireBullet;
 
-/* PC / LAPTOP KEYBOARD CONTROLS */
-document.addEventListener("keydown",e=>{
-  if(e.code==="ArrowLeft") moveDir=-1;
-  if(e.code==="ArrowRight") moveDir=1;
-  if(e.code==="Space") fireBullet();
-});
+/* Keyboard controls */
+document.addEventListener("keydown",e=>{ if(e.code==="ArrowLeft") moveDir=-1; if(e.code==="ArrowRight") moveDir=1; if(e.code==="Space") fireBullet();});
+document.addEventListener("keyup",e=>{ if(e.code==="ArrowLeft"||e.code==="ArrowRight") moveDir=0;});
 
-document.addEventListener("keyup",e=>{
-  if(e.code==="ArrowLeft"||e.code==="ArrowRight") moveDir=0;
-});
-
+// Game loop
 function gameLoop(){
   if(!gameStarted) return;
-
-  if(bgImg.complete){
-    ctx.drawImage(bgImg,0,0,canvas.width,canvas.height);
-  }else{
-    ctx.fillStyle="#000";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-  }
+  if(bgImg.complete) ctx.drawImage(bgImg,0,0,canvas.width,canvas.height);
+  else ctx.fillStyle="#000",ctx.fillRect(0,0,canvas.width,canvas.height);
 
   player.x+=player.speed*moveDir;
   player.x=Math.max(20,Math.min(canvas.width-20,player.x));
   ctx.drawImage(playerImg,player.x-20,player.y-20,40,40);
 
   bullets.forEach((b,i)=>{
-    b.y-=10;
-    ctx.fillStyle="#4fc3ff";
-    ctx.beginPath();
-    ctx.arc(b.x,b.y,5,0,Math.PI*2);
-    ctx.fill();
-
+    b.y-=10; ctx.fillStyle="#4fc3ff"; ctx.beginPath(); ctx.arc(b.x,b.y,5,0,Math.PI*2); ctx.fill();
     zombies.forEach((z,j)=>{
       if(b.x>z.x-25&&b.x<z.x+25&&b.y>z.y-25&&b.y<z.y+25){
-        bullets.splice(i,1);
-        zombies.splice(j,1);
-        player.score+=10;
-        coins+=10;
+        bullets.splice(i,1); zombies.splice(j,1);
+        player.score+=10; coins+=10;
         localStorage.setItem("coins",coins);
         coinDisplay.innerText=coins;
       }
@@ -225,61 +115,53 @@ function gameLoop(){
     if(z.y>canvas.height) gameOver();
   });
 
-  ctx.fillStyle="#fff";
-  ctx.font="20px Orbitron";
+  ctx.fillStyle="#fff"; ctx.font="20px Orbitron";
   ctx.fillText("Score: "+player.score,10,30);
   ctx.fillText("Coins: "+coins,10,55);
-
-  requestAnimationFrame(gameLoop);
 }
 
-function spawnZombie(){
-  zombies.push({x:Math.random()*(canvas.width-60)+30,y:-40,speed:2+Math.random()});
+// Spawn zombie
+function spawnZombie(){ zombies.push({x:Math.random()*(canvas.width-60)+30,y:-40,speed:2+Math.random()}); }
+function fireBullet(){ if(!gameStarted) return; bullets.push({x:player.x,y:player.y-20}); }
+
+function startGame(){ gameStarted=true; bullets=[]; zombies=[]; player.score=0; overlay.style.display="none"; shopOverlay.style.display="none"; updatePlayerImg(); enemySpawnInterval=setInterval(spawnZombie,1000); gameLoop(); }
+function gameOver(){ clearInterval(enemySpawnInterval); gameStarted=false; finalScore.innerText="Score: "+player.score; gameOverOverlay.style.display="flex"; }
+function restartGame(){ gameOverOverlay.style.display="none"; startGame(); }
+function backToMenu(){ gameOverOverlay.style.display="none"; overlay.style.display="flex"; }
+function quitGame(){ location.reload(); }
+
+// Shop system
+const jets=[
+  {name:"slime",price:5000,img:"slime.gif"},
+  {name:"fire",price:12000,img:"fire.png"},
+  {name:"shardex",price:70000,img:"shardex.png"}
+];
+
+function renderShop(){
+  const shopRow=document.getElementById("shopRow"); shopRow.innerHTML="";
+  jets.forEach(j=>{
+    const div=document.createElement("div"); div.className="jet";
+    div.innerHTML=`<img src="${j.img}"><div>${j.name} Jet</div><div class="price">${j.price.toLocaleString()} Coins</div>`;
+    const btn=document.createElement("button");
+    const owned=localStorage.getItem("owned_"+j.name)=="true";
+    if(owned && selectedJet==j.name) btn.textContent="Equipped";
+    else if(owned) btn.textContent="Equip";
+    else btn.textContent="Buy";
+    btn.onclick=()=>buyOrEquip(j.name,j.price);
+    div.appendChild(btn); shopRow.appendChild(div);
+  });
 }
 
-function fireBullet(){
-  if(!gameStarted) return;
-  bullets.push({x:player.x,y:player.y-20});
+function buyOrEquip(name,price){
+  const owned=localStorage.getItem("owned_"+name)=="true";
+  if(owned){ selectedJet=name; localStorage.setItem("jet",name); updatePlayerImg(); renderShop(); return; }
+  if(coins>=price){ coins-=price; localStorage.setItem("coins",coins); localStorage.setItem("owned_"+name,true); selectedJet=name; localStorage.setItem("jet",name); updatePlayerImg(); renderShop(); coinDisplay.innerText=coins; alert(`You bought ${name} jet!`); }
+  else{ alert("Not enough coins! Shoot zombies to earn more 💰"); }
 }
 
-function startGame(){
-  gameStarted=true;
-  bullets=[];zombies=[];player.score=0;
-  overlay.style.display="none";
-  shopOverlay.style.display="none";
-  updatePlayerImg();
-  enemySpawnInterval=setInterval(spawnZombie,1000);
-  gameLoop();
-}
+function openShop(){ overlay.style.display="none"; shopOverlay.style.display="flex"; renderShop(); }
+function closeShop(){ shopOverlay.style.display="none"; overlay.style.display="flex"; }
 
-function gameOver(){
-  clearInterval(enemySpawnInterval);
-  gameStarted=false;
-  finalScore.innerText="Score: "+player.score;
-  gameOverOverlay.style.display="flex";
-}
-
-function restartGame(){gameOverOverlay.style.display="none";startGame();}
-function backToMenu(){gameOverOverlay.style.display="none";overlay.style.display="flex";}
-function quitGame(){location.reload();}
-
-function openShop(){overlay.style.display="none"; shopOverlay.style.display="flex";}
-function closeShop(){shopOverlay.style.display="none"; overlay.style.display="flex";}
-
-function buyJet(jet,price){
-  if(coins>=price){
-    coins-=price;
-    localStorage.setItem("coins",coins);
-    selectedJet=jet;
-    localStorage.setItem("jet",jet);
-    alert("Congrats! You bought "+jet+" jet!");
-    coinDisplay.innerText=coins;
-    closeShop();
-  }else{
-    alert("Not enough coins! Keep shooting zombies to earn more! 💰");
-  }
-}
 </script>
-
 </body>
 </html>
