@@ -7,20 +7,22 @@
 <style>
 body{margin:0;background:#000;color:#fff;font-family:sans-serif;overflow:hidden}
 
-#menu{position:absolute;inset:0;display:flex;justify-content:space-between;align-items:center;padding:20px}
-
-#centerStats{
+#topbar{
 position:absolute;
-left:50%;
-top:50%;
-transform:translate(-50%,-50%);
-text-align:center;
-font-size:22px
+top:0;
+left:0;
+right:0;
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:10px;
+background:#111;
+z-index:10
 }
 
-.blue{background:linear-gradient(135deg,#00f,#fff);padding:12px;border-radius:10px}
-.green{background:linear-gradient(135deg,#0f0,#fff);padding:12px;border-radius:10px}
-.pink{background:linear-gradient(135deg,#ff00aa,#fff);padding:12px;border-radius:10px}
+.blue{background:linear-gradient(135deg,#00f,#fff);padding:10px;border-radius:10px}
+.green{background:linear-gradient(135deg,#0f0,#fff);padding:10px;border-radius:10px}
+.pink{background:linear-gradient(135deg,#ff00aa,#fff);padding:10px;border-radius:10px}
 
 canvas{display:none}
 </style>
@@ -28,13 +30,10 @@ canvas{display:none}
 
 <body>
 
-<div id="menu">
-<div class="blue">🪙 SCORE: <span id="highScore">0</span></div>
+<div id="topbar">
+<div class="blue">🪙 <span id="scoreUI">0</span></div>
+<div class="pink">🧠 <span id="mindUI">0</span></div>
 <button class="green" onclick="startGame()">▶ PLAY</button>
-</div>
-
-<div id="centerStats">
-<div class="pink">🧠 Minds: <span id="mindCount">0</span></div>
 </div>
 
 <canvas id="game"></canvas>
@@ -44,30 +43,28 @@ canvas{display:none}
 let jetImg=new Image()
 jetImg.src="jet.gif"
 
-let zombieImg=new Image()
-zombieImg.src="zombie.png"
-
-let save=JSON.parse(localStorage.getItem("zb"))||{
-high:0,
-kills:0,
-minds:0
+let zombieImgs=[]
+for(let n of ["zombie.png","zombie.png2","zombie.png3"]){
+let img=new Image()
+img.src=n
+zombieImgs.push(img)
 }
 
-highScore.innerText=save.high
-mindCount.innerText=save.minds
+let save=JSON.parse(localStorage.getItem("zb"))||{score:0,minds:0}
+
+scoreUI.innerText=save.score
+mindUI.innerText=save.minds
 
 let c=document.getElementById("game")
 let x,y
 let bullets=[]
 let zombies=[]
+let blood=[]
 let firePlus=0
-let kills=0
+let score=0
 let minds=save.minds
 
 function startGame(){
-menu.style.display="none"
-centerStats.style.display="none"
-
 c.style.display="block"
 c.width=innerWidth
 c.height=innerHeight
@@ -97,21 +94,27 @@ g.fillRect(b.x,b.y,4,8)
 
 zombies.forEach((z,zi)=>{
 z.y+=z.s
-g.drawImage(zombieImg,z.x,z.y,40,40)
+g.drawImage(z.img,z.x,z.y,40,40)
 
 bullets.forEach((b,bi)=>{
 if(Math.abs(b.x-z.x)<20 && Math.abs(b.y-z.y)<20){
 
-zombies.splice(zi,1)
-bullets.splice(bi,1)
-kills++
-
-// random minds drop
-if(Math.random()<0.3){
-minds++
+// blue blood particles
+for(let i=0;i<6;i++){
+blood.push({x:z.x+20,y:z.y+20,vy:Math.random()*3})
 }
 
-// rare fire plus drop
+zombies.splice(zi,1)
+bullets.splice(bi,1)
+
+score++
+scoreUI.innerText=score
+
+if(Math.random()<0.3){
+minds++
+mindUI.innerText=minds
+}
+
 if(Math.random()<0.1 && firePlus<5){
 firePlus++
 }
@@ -121,6 +124,13 @@ firePlus++
 if(Math.abs(z.x-x)<25 && Math.abs(z.y-y)<25){
 endGame()
 }
+})
+
+blood.forEach((p,pi)=>{
+p.y+=p.vy
+g.fillStyle="blue"
+g.fillRect(p.x,p.y,3,3)
+if(p.y>c.height) blood.splice(pi,1)
 })
 
 requestAnimationFrame(loop)
@@ -138,13 +148,14 @@ setInterval(()=>{
 zombies.push({
 x:Math.random()*c.width,
 y:-10,
-s:3
+s:3,
+img:zombieImgs[Math.floor(Math.random()*zombieImgs.length)]
 })
 },1000)
 }
 
 function endGame(){
-save.high=Math.max(save.high,kills)
+save.score=Math.max(save.score,score)
 save.minds=minds
 localStorage.setItem("zb",JSON.stringify(save))
 location.reload()
