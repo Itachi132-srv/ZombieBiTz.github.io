@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zombid BiTz</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Zombie Mini Shooter</title>
 <style>
 body{margin:0;overflow:hidden;background:#87ceeb;}
 #overlay,#gameOverOverlay{
@@ -12,11 +12,19 @@ body{margin:0;overflow:hidden;background:#87ceeb;}
 }
 #overlay button,#gameOverOverlay button{font-size:20px;margin:10px;padding:10px 25px;}
 canvas{display:block;}
+#fireBtn{
+  position:absolute;bottom:20px;right:20px;width:80px;height:80px;background:red;border-radius:40px;color:white;font-size:20px;z-index:10;
+}
+#leftBtn,#rightBtn{
+  position:absolute;bottom:20px;width:60px;height:60px;background:green;color:white;font-size:18px;border-radius:30px;z-index:10;
+}
+#leftBtn{left:20px;}
+#rightBtn{left:100px;}
 </style>
 </head>
 <body>
 <div id="overlay">
-  <h1>Mini Militia 2D</h1>
+  <h1>Zombie Mini Shooter</h1>
   <button onclick="startGame()">Play</button>
   <button onclick="quitGame()">Quit</button>
 </div>
@@ -29,6 +37,9 @@ canvas{display:block;}
 </div>
 
 <canvas id="gameCanvas"></canvas>
+<button id="fireBtn">Fire</button>
+<button id="leftBtn">◀</button>
+<button id="rightBtn">▶</button>
 
 <script>
 const canvas=document.getElementById('gameCanvas');
@@ -36,22 +47,19 @@ const ctx=canvas.getContext('2d');
 canvas.width=window.innerWidth;
 canvas.height=window.innerHeight;
 
-let player={x:canvas.width/2,y:canvas.height/2,size:30,speed:5,score:0};
-let bullets=[],enemies=[];
-let keys={};
+let player={x:canvas.width/2,y:canvas.height-50,width:40,height:40,speed:7,score:0};
+let bullets=[];
+let zombies=[];
 let gameStarted=false;
 let enemySpawnInterval;
+let moveDir=0; // -1 left, 1 right, 0 stop
 
 // Controls
-document.addEventListener('keydown',e=>keys[e.key]=true);
-document.addEventListener('keyup',e=>keys[e.key]=false);
-
-// Mouse shooting
-canvas.addEventListener('click',(e)=>{
-  if(!gameStarted) return;
-  const angle=Math.atan2(e.clientY-player.y,e.clientX-player.x);
-  bullets.push({x:player.x,y:player.y,angle:angle,speed:10});
-});
+document.getElementById('leftBtn').addEventListener('touchstart',()=>{moveDir=-1;});
+document.getElementById('leftBtn').addEventListener('touchend',()=>{moveDir=0;});
+document.getElementById('rightBtn').addEventListener('touchstart',()=>{moveDir=1;});
+document.getElementById('rightBtn').addEventListener('touchend',()=>{moveDir=0;});
+document.getElementById('fireBtn').addEventListener('touchstart',fireBullet);
 
 // Game loop
 function gameLoop(){
@@ -59,43 +67,37 @@ function gameLoop(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
   // Move player
-  if(keys['w']) player.y-=player.speed;
-  if(keys['s']) player.y+=player.speed;
-  if(keys['a']) player.x-=player.speed;
-  if(keys['d']) player.x+=player.speed;
+  player.x+=player.speed*moveDir;
+  if(player.x<player.width/2) player.x=player.width/2;
+  if(player.x>canvas.width-player.width/2) player.x=canvas.width-player.width/2;
 
   // Draw player
   ctx.fillStyle='blue';
-  ctx.fillRect(player.x-player.size/2,player.y-player.size/2,player.size,player.size);
+  ctx.fillRect(player.x-player.width/2,player.y-player.height/2,player.width,player.height);
 
   // Update bullets
   bullets.forEach((b,i)=>{
-    b.x+=Math.cos(b.angle)*b.speed;
-    b.y+=Math.sin(b.angle)*b.speed;
+    b.y-=b.speed;
     ctx.fillStyle='yellow';
-    ctx.fillRect(b.x-5,b.y-5,10,10);
+    ctx.fillRect(b.x-5,b.y-10,10,20);
 
-    // Check collision with enemies
-    enemies.forEach((en,j)=>{
-      if(Math.abs(b.x-en.x)<en.size/2 && Math.abs(b.y-en.y)<en.size/2){
+    // Collision with zombies
+    zombies.forEach((z,j)=>{
+      if(b.x>z.x-z.width/2 && b.x<z.x+z.width/2 && b.y>z.y-z.height/2 && b.y<z.y+z.height/2){
         bullets.splice(i,1);
-        enemies.splice(j,1);
+        zombies.splice(j,1);
         player.score+=10;
       }
     });
   });
 
-  // Update enemies
-  enemies.forEach(en=>{
-    const dx=player.x-en.x;
-    const dy=player.y-en.y;
-    const dist=Math.sqrt(dx*dx+dy*dy);
-    en.x+=dx/dist*en.speed;
-    en.y+=dy/dist*en.speed;
+  // Update zombies
+  zombies.forEach((z)=>{
+    z.y+=z.speed;
     ctx.fillStyle='red';
-    ctx.fillRect(en.x-en.size/2,en.y-en.size/2,en.size,en.size);
+    ctx.fillRect(z.x-z.width/2,z.y-z.height/2,z.width,z.height);
 
-    if(dist<player.size/2+en.size/2){
+    if(z.y>canvas.height){
       gameOver();
     }
   });
@@ -108,24 +110,37 @@ function gameLoop(){
   requestAnimationFrame(gameLoop);
 }
 
-// Spawn enemies
-function spawnEnemy(){
-  const side=Math.floor(Math.random()*4);
-  let x,y;
-  if(side===0){x=0;y=Math.random()*canvas.height;}
-  else if(side===1){x=canvas.width;y=Math.random()*canvas.height;}
-  else if(side===2){x=Math.random()*canvas.width;y=0;}
-  else{x=Math.random()*canvas.width;y=canvas.height;}
-  enemies.push({x:x,y:y,size:30,speed:2+Math.random()*1});
+// Spawn zombies
+function spawnZombie(){
+  if(!gameStarted) return;
+  const x=Math.random()*(canvas.width-40)+20;
+  zombies.push({x:x,y:-20,width:40,height:40,speed:2+Math.random()*1});
 }
 
-// Game control functions
+// Controls for desktop
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft') moveDir=-1;
+  if(e.key==='ArrowRight') moveDir=1;
+  if(e.key===' ') fireBullet();
+});
+document.addEventListener('keyup',e=>{
+  if(e.key==='ArrowLeft' || e.key==='ArrowRight') moveDir=0;
+});
+
+// Fire bullet
+function fireBullet(){
+  if(!gameStarted) return;
+  bullets.push({x:player.x,y:player.y-20,speed:10});
+}
+
+// Game functions
 function startGame(){
   gameStarted=true;
+  player.score=0;
+  bullets=[];
+  zombies=[];
   document.getElementById('overlay').style.display='none';
-  player.x=canvas.width/2;player.y=canvas.height/2;player.score=0;
-  bullets=[];enemies=[];
-  enemySpawnInterval=setInterval(spawnEnemy,1000);
+  enemySpawnInterval=setInterval(spawnZombie,1000);
   gameLoop();
 }
 function gameOver(){
