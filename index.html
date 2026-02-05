@@ -31,8 +31,8 @@ button{padding:12px 20px;border:none;border-radius:12px;font-family:'Orbitron',s
 #profileUI{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;align-items:center;background:rgba(0,0,0,.95);z-index:20;width:100%}
 #profileUI input{margin:5px;padding:8px;border-radius:6px;border:none;font-size:16px}
 
-/* GAME */
-canvas{display:none;touch-action:none;width:100%;height:100%;}
+/* SHOP */
+#shopUI{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;align-items:center;background:rgba(0,0,0,.95);z-index:20;width:100%}
 
 /* GAME HUD */
 #gameTop{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:center;z-index:10;display:none}
@@ -49,7 +49,7 @@ canvas{display:none;touch-action:none;width:100%;height:100%;}
 <!-- MAIN MENU -->
 <div id="menu">
  <div id="menuTop">
-  <div id="profile"><img id="pfp"><span id="pname">PLAYER</span></div>
+  <div id="profile" onclick="openProfile()"><img id="pfp"><span id="pname">PLAYER</span></div>
   <div>
    <div id="coins">💰 0</div>
    <div id="highScore">HIGH SCORE: 0</div>
@@ -108,8 +108,7 @@ canvas{display:none;touch-action:none;width:100%;height:100%;}
 <script>
 /* STORAGE */
 let data=JSON.parse(localStorage.getItem("ZB"))||{name:"PLAYER",pfp:"",high:0,coins:0};
-pname.innerText=data.name;
-if(data.pfp)pfp.src=data.pfp;
+pname.innerText=data.name;if(data.pfp)pfp.src=data.pfp;
 document.getElementById("coins").innerText="💰 "+data.coins;
 document.getElementById("highScore").innerText="HIGH SCORE: "+data.high;
 
@@ -133,53 +132,62 @@ function saveSettings(){savedTxt.style.display="inline";setTimeout(()=>savedTxt.
 /* GAME */
 const canvas=document.getElementById("gameCanvas");
 const ctx=canvas.getContext("2d");
-canvas.width=innerWidth;canvas.height=innerHeight;
+canvas.width=window.innerWidth;canvas.height=window.innerHeight;
 
-let player,bullets,zombies,poisons,coinsCollected;
+let player,bullets=[],zombies=[],poisons=[],coinsCollected,scoreNum,HP;
 let running=false,doubleFire=false,fireI,spawnI;
 
 const jetImg=new Image(); jetImg.src="jet.gif";
 const zombieImg=new Image(); zombieImg.src="zombie.png";
 
+/* START GAME */
 function startGame(){
- if(running)return;
- running=true; menu.style.display="none";canvas.style.display="block";gameTop.style.display="flex";gameOver.style.display="none";
+ if(running) return;
+ running=true;
+ menu.style.display="none";canvas.style.display="block";gameTop.style.display="flex";gameOver.style.display="none";
  player={x:canvas.width/2,y:canvas.height-80,HP:100};
- bullets=[];zombies=[];poisons=[];coinsCollected=0;doubleFire=false;
- document.getElementById("hp").innerText=player.HP;
- document.getElementById("score").innerText=0;
+ bullets=[];zombies=[];poisons=[];coinsCollected=0;doubleFire=false;scoreNum=0;HP=100;
+ document.getElementById("hp").innerText=HP;
+ document.getElementById("score").innerText=scoreNum;
  fireI=setInterval(autoFire,200); spawnI=setInterval(spawnZombie,1200); requestAnimationFrame(loop);
 }
+
+/* CONTROLS */
 canvas.addEventListener("touchmove",e=>player.x=e.touches[0].clientX);
 canvas.addEventListener("mousemove",e=>player.x=e.clientX);
+document.addEventListener("keydown",e=>{if(e.key==="ArrowLeft") player.x-=15; if(e.key==="ArrowRight") player.x+=15; if(e.key===" ") autoFire();});
 
+/* AUTO FIRE & SPAWN */
 function autoFire(){if(!running)return;for(let i=0;i<(doubleFire?2:1);i++) bullets.push({x:player.x+i*10-5,y:player.y});}
 function spawnZombie(){zombies.push({x:Math.random()*(canvas.width-50)+25,y:-40,hp:50,t:0});}
 
+/* GAME LOOP */
 function loop(){
- if(!running)return;
+ if(!running) return;
  ctx.clearRect(0,0,canvas.width,canvas.height);
  ctx.drawImage(jetImg,player.x-20,player.y-20,40,40);
 
  bullets.forEach((b,i)=>{b.y-=10;ctx.fillStyle="yellow";ctx.fillRect(b.x,b.y,4,8);if(b.y<0) bullets.splice(i,1);});
+
  zombies.forEach((z,zi)=>{
   z.y+=2; z.t++;
   ctx.drawImage(zombieImg,z.x-25,z.y-25,50,50);
-  bullets.forEach((b,bi)=>{if(Math.abs(b.x-z.x)<25 && Math.abs(b.y-z.y)<25){z.hp-=25; bullets.splice(bi,1); if(z.hp<=0){zombies.splice(zi,1);coinsCollected+=10;document.getElementById("coins").innerText="💰 "+(data.coins+coinsCollected);doubleFire=true;}}});
+  bullets.forEach((b,bi)=>{if(Math.abs(b.x-z.x)<25 && Math.abs(b.y-z.y)<25){z.hp-=25; bullets.splice(bi,1); if(z.hp<=0){zombies.splice(zi,1);coinsCollected+=10;doubleFire=true;scoreNum+=10;document.getElementById("score").innerText=scoreNum;document.getElementById("coins").innerText="💰 "+(data.coins+coinsCollected);}}});
   if(z.t>90){poisons.push({x:z.x,y:z.y});z.t=0;}
-  if(Math.abs(player.x-z.x)<25 && Math.abs(player.y-z.y)<25){player.HP-=35;document.getElementById("hp").innerText=player.HP;poisons.splice(0,1);}
+  if(Math.abs(player.x-z.x)<25 && Math.abs(player.y-z.y)<25){HP-=35;document.getElementById("hp").innerText=HP;poisons.splice(0,1);}
  });
- poisons.forEach((p,pi)=>{p.y+=5;ctx.fillStyle="lime";ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);ctx.fill();if(Math.abs(player.x-p.x)<15 && Math.abs(player.y-p.y)<15){player.HP-=35;document.getElementById("hp").innerText=player.HP;poisons.splice(pi,1);}});
- if(player.HP<=0)endGame();
+
+ poisons.forEach((p,pi)=>{p.y+=5;ctx.fillStyle="lime";ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);ctx.fill();if(Math.abs(player.x-p.x)<15 && Math.abs(player.y-p.y)<15){HP-=35;document.getElementById("hp").innerText=HP;poisons.splice(pi,1);}});
+ if(HP<=0) endGame();
  requestAnimationFrame(loop);
 }
 
+/* ENDGAME */
 function endGame(){
  running=false;clearInterval(fireI);clearInterval(spawnI);
- finalScore.innerText=document.getElementById("score").innerText;
+ finalScore.innerText="SCORE: "+scoreNum;
  document.getElementById("earnedCoins").innerText="COINS EARNED: "+coinsCollected;
- data.coins+=coinsCollected;
- if(parseInt(document.getElementById("score").innerText)>data.high)data.high=parseInt(document.getElementById("score").innerText);
+ data.coins+=coinsCollected;if(scoreNum>data.high)data.high=scoreNum;
  localStorage.setItem("ZB",JSON.stringify(data));
  gameOver.style.display="flex";canvas.style.display="none";gameTop.style.display="none";
 }
