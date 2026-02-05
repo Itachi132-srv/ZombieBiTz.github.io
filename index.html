@@ -55,13 +55,14 @@ button{padding:10px;margin:5px;font-size:16px;border:none;border-radius:5px;back
 <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
 
 <script>
-// THREE.js setup
+// Scene
 let scene, camera, renderer, controls;
 let player={health:100,score:0,coins:0,gun:'Pistol'};
 let zombies=[],bullets=[];
 let gameStarted=false,wave=1;
 let move={forward:0,right:0};
 
+// INIT
 function init(){
   scene=new THREE.Scene();
   scene.background=new THREE.Color(0x87ceeb);
@@ -73,54 +74,65 @@ function init(){
   renderer.setSize(window.innerWidth,window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
+  // Light
   const light=new THREE.DirectionalLight(0xffffff,1);
   light.position.set(0,50,50);
   scene.add(light);
 
-  const groundGeo=new THREE.BoxGeometry(100,1,100);
+  // Ground
   const groundMat=new THREE.MeshStandardMaterial({color:0x228B22});
+  const groundGeo=new THREE.BoxGeometry(100,1,100);
   const ground=new THREE.Mesh(groundGeo,groundMat);
   ground.position.y=-0.5;
   scene.add(ground);
+
+  // Simple obstacles
+  for(let i=0;i<5;i++){
+    const box=new THREE.Mesh(new THREE.BoxGeometry(3,3,3), new THREE.MeshStandardMaterial({color:0x8B4513}));
+    box.position.set(Math.random()*40-20,1.5,Math.random()*40-20);
+    scene.add(box);
+  }
+
+  // Player hand + gun placeholder
+  const gun=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.2,1), new THREE.MeshStandardMaterial({color:0x000000}));
+  gun.position.set(0,-0.2,-0.5);
+  camera.add(gun);
+  scene.add(camera);
 
   controls=new THREE.PointerLockControls(camera,document.body);
 
   document.addEventListener('click',()=>{if(gameStarted && !controls.isLocked) controls.lock();});
 
+  // Zombies spawn interval
   setInterval(spawnZombie,3000);
+
   animate();
 }
 
-// Joystick using nipplejs
+// Joystick
 let joystick=nipplejs.create({zone:document.getElementById('joystickContainer'),mode:'static',position:{left:'50px',bottom:'50px'},size:100});
-joystick.on('move',(evt, data)=>{
-  move.forward=data.vector.y;
-  move.right=data.vector.x;
-});
+joystick.on('move',(evt,data)=>{move.forward=data.vector.y;move.right=data.vector.x;});
 joystick.on('end',()=>{move.forward=0;move.right=0;});
 
-// Mobile buttons
+// Buttons
 document.getElementById('fireBtn').addEventListener('touchstart',shootBullet);
 document.getElementById('jumpBtn').addEventListener('touchstart',()=>{camera.position.y+=1;});
-document.getElementById('grenadeBtn').addEventListener('touchstart',()=>{alert('Grenade thrown!');});
+document.getElementById('grenadeBtn').addEventListener('touchstart',()=>{explodeGrenade();});
 
-// Game logic
+// Zombie spawn
 function spawnZombie(){
   if(!gameStarted) return;
-  const geo=new THREE.BoxGeometry(1,2,1);
-  const mat=new THREE.MeshStandardMaterial({color:0xff0000});
-  const z=new THREE.Mesh(geo,mat);
+  const z=new THREE.Mesh(new THREE.BoxGeometry(1,2,1),new THREE.MeshStandardMaterial({color:0xff0000}));
   z.position.set(Math.random()*50-25,1,Math.random()*50-25);
   z.health=50+wave*10;
   zombies.push(z);
   scene.add(z);
 }
 
+// Shoot bullet
 function shootBullet(){
   if(!gameStarted) return;
-  const geo=new THREE.SphereGeometry(0.1,8,8);
-  const mat=new THREE.MeshBasicMaterial({color:0xffff00});
-  const b=new THREE.Mesh(geo,mat);
+  const b=new THREE.Mesh(new THREE.SphereGeometry(0.1,8,8),new THREE.MeshBasicMaterial({color:0xffff00}));
   b.position.copy(camera.position);
   b.direction=new THREE.Vector3();
   camera.getWorldDirection(b.direction);
@@ -128,6 +140,14 @@ function shootBullet(){
   scene.add(b);
 }
 
+// Grenade explosion
+function explodeGrenade(){
+  zombies.forEach(z=>{
+    if(z.position.distanceTo(camera.position)<5) z.health=0;
+  });
+}
+
+// Animate loop
 function animate(){
   requestAnimationFrame(animate);
   if(gameStarted){
@@ -139,23 +159,15 @@ function animate(){
       const dir=new THREE.Vector3();
       dir.subVectors(camera.position,z.position).normalize();
       z.position.add(dir.multiplyScalar(0.02));
-      if(z.position.distanceTo(camera.position)<1){
-        player.health-=0.2;
-        if(player.health<=0) gameOver();
-      }
+      if(z.position.distanceTo(camera.position)<1){player.health-=0.2;if(player.health<=0) gameOver();}
     });
 
     bullets.forEach((b,i)=>{
       b.position.add(b.direction.clone().multiplyScalar(0.5));
       zombies.forEach((z,j)=>{
         if(b.position.distanceTo(z.position)<1){
-          z.health-=50;
-          scene.remove(b);
-          bullets.splice(i,1);
-          if(z.health<=0){
-            player.score+=50;player.coins+=50;
-            scene.remove(z);zombies.splice(j,1);
-          }
+          z.health-=50;scene.remove(b);bullets.splice(i,1);
+          if(z.health<=0){player.score+=50;player.coins+=50;scene.remove(z);zombies.splice(j,1);}
         }
       });
     });
@@ -170,21 +182,11 @@ function animate(){
 function startGame(){gameStarted=true;player.health=100;document.getElementById('overlay').style.display='none';}
 
 // Shop
-function toggleShop(){
-  const shop=document.getElementById('shopPanel');
-  shop.style.display=shop.style.display==='none'?'block':'none';
-}
+function toggleShop(){document.getElementById('shopPanel').style.display=document.getElementById('shopPanel').style.display==='none'?'block':'none';}
+function buyGun(name,price){if(player.coins>=price){player.coins-=price;player.gun=name;alert(name+' equipped!');}else alert('Not enough coins!');}
 
-function buyGun(name,price){
-  if(player.coins>=price){player.coins-=price;player.gun=name;alert(name+' equipped!');}
-  else alert('Not enough coins!');
-}
-
-function gameOver(){
-  alert('Game Over! Score: '+Math.floor(player.score));
-  gameStarted=false;
-  document.getElementById('overlay').style.display='flex';
-}
+// Game over
+function gameOver(){alert('Game Over! Score: '+Math.floor(player.score));gameStarted=false;document.getElementById('overlay').style.display='flex';}
 
 init();
 </script>
