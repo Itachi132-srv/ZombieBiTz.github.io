@@ -24,7 +24,7 @@ canvas{display:block;}
 </head>
 <body>
 <div id="overlay">
-  <h1>Zombie Mini Shooter</h1>
+  <h1>Zombie BiTz</h1>
   <button onclick="startGame()">Play</button>
   <button onclick="quitGame()">Quit</button>
 </div>
@@ -59,7 +59,7 @@ let moveDir=0;
 const zombieImg=new Image();
 zombieImg.src='zombie.png'; // Upload your zombie png here
 const playerImg=new Image();
-playerImg.src='army.png'; // Upload your army officer png here
+playerImg.src='army.png'; // Upload your player png here
 const boxImg=new Image();
 boxImg.src='army.png'; // Upload box / obstacle png here
 
@@ -95,7 +95,7 @@ function gameLoop(){
   if(player.x<player.width/2) player.x=player.width/2;
   if(player.x>canvas.width-player.width/2) player.x=canvas.width-player.width/2;
 
-  // Draw player image
+  // Draw only player at center (no side players)
   ctx.drawImage(playerImg,player.x-player.width/2,player.y-player.height/2,player.width,player.height);
 
   // Update bullets
