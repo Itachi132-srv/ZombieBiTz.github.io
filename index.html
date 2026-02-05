@@ -2,14 +2,21 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>ZOMBIE BLITZ</title>
+<title>ZOMBIE BITZ</title>
 
 <style>
 body{margin:0;background:#000;color:#fff;font-family:sans-serif;overflow:hidden}
 
-/* MENU */
 #menu{position:absolute;inset:0;display:flex;justify-content:space-between;align-items:center;padding:20px}
-#centerStats{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;font-size:20px}
+
+#centerStats{
+position:absolute;
+left:50%;
+top:50%;
+transform:translate(-50%,-50%);
+text-align:center;
+font-size:22px
+}
 
 .blue{background:linear-gradient(135deg,#00f,#fff);padding:12px;border-radius:10px}
 .green{background:linear-gradient(135deg,#0f0,#fff);padding:12px;border-radius:10px}
@@ -22,18 +29,23 @@ canvas{display:none}
 <body>
 
 <div id="menu">
-<div class="blue">🏆 HIGH SCORE: <span id="highScore">0</span></div>
+<div class="blue">🪙 SCORE: <span id="highScore">0</span></div>
 <button class="green" onclick="startGame()">▶ PLAY</button>
 </div>
 
 <div id="centerStats">
-<div>🧟 Zombies Killed: <span id="zk">0</span></div>
 <div class="pink">🧠 Minds: <span id="mindCount">0</span></div>
 </div>
 
 <canvas id="game"></canvas>
 
 <script>
+
+let jetImg=new Image()
+jetImg.src="jet.png"
+
+let zombieImg=new Image()
+zombieImg.src="zombie.png"
 
 let save=JSON.parse(localStorage.getItem("zb"))||{
 high:0,
@@ -42,20 +54,18 @@ minds:0
 }
 
 highScore.innerText=save.high
-zk.innerText=save.kills
 mindCount.innerText=save.minds
 
 let c=document.getElementById("game")
 let x,y
 let bullets=[]
 let zombies=[]
-let powerups=[]
 let firePlus=0
 let kills=0
 let minds=save.minds
 
 function startGame(){
-document.getElementById("menu").style.display="none"
+menu.style.display="none"
 centerStats.style.display="none"
 
 c.style.display="block"
@@ -77,8 +87,7 @@ function loop(){
 let g=c.getContext("2d")
 g.clearRect(0,0,c.width,c.height)
 
-g.fillStyle="cyan"
-g.fillRect(x-10,y-20,20,20)
+g.drawImage(jetImg,x-25,y-25,50,50)
 
 bullets.forEach(b=>{
 b.y-=8
@@ -88,15 +97,14 @@ g.fillRect(b.x,b.y,4,8)
 
 zombies.forEach((z,zi)=>{
 z.y+=z.s
-g.fillStyle="green"
-g.fillRect(z.x,z.y,10,10)
+g.drawImage(zombieImg,z.x,z.y,40,40)
 
 bullets.forEach((b,bi)=>{
-if(Math.abs(b.x-z.x)<10 && Math.abs(b.y-z.y)<10){
+if(Math.abs(b.x-z.x)<20 && Math.abs(b.y-z.y)<20){
+
 zombies.splice(zi,1)
 bullets.splice(bi,1)
 kills++
-save.kills=kills
 
 // random minds drop
 if(Math.random()<0.3){
@@ -110,7 +118,7 @@ firePlus++
 }
 })
 
-if(Math.abs(z.x-x)<15 && Math.abs(z.y-y)<15){
+if(Math.abs(z.x-x)<25 && Math.abs(z.y-y)<25){
 endGame()
 }
 })
@@ -121,7 +129,7 @@ requestAnimationFrame(loop)
 setInterval(()=>{
 bullets.push({x:x,y:y})
 for(let i=0;i<firePlus;i++){
-bullets.push({x:x+(i*6),y:y})
+bullets.push({x:x+(i*8),y:y})
 }
 },200)
 
