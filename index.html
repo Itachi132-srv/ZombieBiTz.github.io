@@ -121,8 +121,8 @@ canvas{display:block;}
 <div id="gameOver" class="overlay">
   <h1>DEFEAT ☠</h1>
   <p>Score: <span id="finalScore">0</span></p>
-  <button class="menuBtn" id="restartBtn" onclick="restartGame()">RESTART</button>
-  <button class="menuBtn" id="menuBtn" onclick="backToMenu()">MAIN MENU</button>
+  <button class="menuBtn" onclick="restartGame()">RESTART</button>
+  <button class="menuBtn" onclick="backToMenu()">MAIN MENU</button>
 </div>
 
 <canvas id="gameCanvas"></canvas>
@@ -143,16 +143,16 @@ let selectedJet = localStorage.getItem("jet") || "slime";
 coinDisplay.innerText = coins;
 highScoreDisplay.innerText = highScore;
 
-let player={x:canvas.width/2,y:canvas.height-50,speed:7,score:0,img:selectedJet};
+let player={x:canvas.width/2,y:canvas.height-50,speed:7,score:0};
 let bullets=[],zombies=[];
 let gameStarted=false,enemySpawn,moveDir=0;
 
 const zombieImg=new Image(); zombieImg.src="zombie.png";
-const playerImg=new Image(); playerImg.src="jet.png"
+const playerImg=new Image(); 
 const bgImg=new Image(); bgImg.src="background.png";
 
 function updatePlayerImg(){
-  playerImg.src = selectedJet + ".png";
+  playerImg.src = selectedJet + "jet.png";
 }
 
 /* CONTROLS */
@@ -226,8 +226,11 @@ function fireBullet(){
 
 function startGame(){
   menu.style.display="none";
+  gameOver.style.display="none";
+  shop.style.display="none";
   gameStarted=true;
   bullets=[];zombies=[];player.score=0;
+  updatePlayerImg();
   enemySpawn=setInterval(spawnZombie,1000);
   gameLoop();
 }
