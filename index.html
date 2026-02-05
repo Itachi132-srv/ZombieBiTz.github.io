@@ -1,184 +1,147 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zombie BiTz</title>
+<title>ZOMBIE BITZ</title>
+
 <style>
-body{margin:0;background:#000;color:#fff;font-family:'Orbitron',sans-serif;overflow:hidden}
-*{box-sizing:border-box;text-transform:uppercase}
+body{margin:0;background:#000;color:#fff;font-family:sans-serif;overflow:hidden}
 
-/* MAIN MENU */
-#menu{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:10px;height:100vh;}
-#menuTop{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;}
-#highScore,#coinsBox,#mindsBox{font-size:16px;margin:2px;}
-#menuCenter{text-align:center;margin-top:30px;font-size:18px;}
-#menuBottom{display:flex;justify-content:space-around;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
-button{padding:12px 18px;border:none;border-radius:12px;font-family:'Orbitron',sans-serif;cursor:pointer;font-size:16px;}
-#shopBtn{background:gold;color:#000;}
-#playBtn{background:linear-gradient(135deg,#00c853,#b2ff59);color:#000;}
-#settingsBtn{background:gray;color:#fff;}
+/* MENU */
+#menu{position:absolute;inset:0;display:flex;justify-content:space-between;align-items:center;padding:20px}
+#centerStats{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;font-size:20px}
 
-/* OVERLAYS */
-.overlay{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;align-items:center;background:rgba(0,0,0,.95);z-index:20;width:100%;}
-.option{margin:10px;font-size:18px;}
-.option button{margin-left:10px;padding:5px 12px;border-radius:6px;font-size:16px;}
-#profileUI input{margin:5px;padding:8px;border-radius:6px;border:none;font-size:16px}
+.blue{background:linear-gradient(135deg,#00f,#fff);padding:12px;border-radius:10px}
+.green{background:linear-gradient(135deg,#0f0,#fff);padding:12px;border-radius:10px}
+.pink{background:linear-gradient(135deg,#ff00aa,#fff);padding:12px;border-radius:10px}
 
-/* GAME HUD */
-#gameTop{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:center;z-index:10;display:none}
-#hpBox,#scoreBoxGame,#coinsGame,#mindsGame{background:#111;padding:6px 12px;border-radius:10px;font-size:16px}
-
-/* GAME OVER */
-#gameOver{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;align-items:center;background:rgba(0,0,0,.95);z-index:30;text-align:center;padding:10px;}
-#gameOver h1{color:red;margin-bottom:10px;font-size:28px}
-#gameOver p{margin:5px;font-size:16px;}
-#gameOver button{margin:5px 10px;padding:12px 20px;border-radius:12px;font-size:16px;}
-
-/* MOBILE ADJUST */
-@media(max-width:600px){
- #menuBottom{flex-direction:column;gap:8px;}
- #menuTop{flex-direction:column;align-items:flex-start;}
- #menuTop div{margin-bottom:5px;}
-}
+canvas{display:none}
 </style>
 </head>
+
 <body>
 
-<!-- MAIN MENU -->
 <div id="menu">
- <div id="menuTop">
-  <div id="highScore">HIGH SCORE: 0</div>
-  <div id="coinsBox">COINS: 0 🪙</div>
- </div>
- <div id="menuCenter">
-   MINDS COLLECTED: <span id="menuMinds">0</span>
- </div>
- <div id="menuBottom">
-  <button id="shopBtn">SHOP</button>
-  <button id="playBtn">PLAY</button>
-  <button id="settingsBtn">SETTINGS</button>
- </div>
+<div class="blue">🏆 HIGH SCORE: <span id="highScore">0</span></div>
+<button class="green" onclick="startGame()">▶ PLAY</button>
 </div>
 
-<!-- SETTINGS -->
-<div class="overlay" id="settingsUI">
- <h2>SETTINGS</h2>
- <div class="option">Music <button id="musicBtn">OFF</button></div>
- <div class="option">Sound FX <button id="soundBtn">OFF</button></div>
- <div class="option">FPS <button id="fps30">30</button><button id="fps60">60</button></div>
- <button id="saveSettings" class="btn">SAVE</button><span id="savedTxt" style="margin-left:10px;color:lime;display:none">SAVED</span>
- <button class="btn" onclick="closeAll()">BACK</button>
+<div id="centerStats">
+<div>🧟 Zombies Killed: <span id="zk">0</span></div>
+<div class="pink">🧠 Minds: <span id="mindCount">0</span></div>
 </div>
 
-<!-- GAME -->
-<div id="gameTop">
- <div id="hpBox">HP: <span id="hp">100</span></div>
- <div id="scoreBoxGame">SCORE: <span id="scoreGame">0</span></div>
- <div id="coinsGame">COINS: <span id="coins">0</span></div>
- <div id="mindsGame">MINDS: <span id="minds">0</span></div>
-</div>
-
-<canvas id="gameCanvas"></canvas>
-
-<!-- GAME OVER -->
-<div id="gameOver">
- <h1>DEFEAT ☠</h1>
- <p id="finalScore">SCORE: 0</p>
- <p id="coinsEarned">COINS EARNED: 0</p>
- <p id="mindsEarned">MINDS COLLECTED: 0</p>
- <button id="restartBtn">RESTART</button>
- <button id="backMenuBtn">MAIN MENU</button>
-</div>
+<canvas id="game"></canvas>
 
 <script>
-/* STORAGE */
-let data=JSON.parse(localStorage.getItem("ZB"))||{high:0,coins:0,minds:0};
-document.getElementById("highScore").innerText="HIGH SCORE: "+data.high;
-document.getElementById("coinsBox").innerText="COINS: "+data.coins+" 💰";
-document.getElementById("menuMinds").innerText=data.minds;
 
-/* MENU BUTTONS */
-playBtn.onclick=startGame;
-shopBtn.onclick=()=>{alert("SOON")};
-settingsBtn.onclick=()=>{settingsUI.style.display="flex";};
+let save=JSON.parse(localStorage.getItem("zb"))||{
+high:0,
+kills:0,
+minds:0
+}
 
-/* GAME VARIABLES */
-const canvas=document.getElementById("gameCanvas");
-const ctx=canvas.getContext("2d");
-canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+highScore.innerText=save.high
+zk.innerText=save.kills
+mindCount.innerText=save.minds
 
-let player, bullets=[], zombies=[], score=0, HP=100, coins=0, minds=0, doubleFire=false;
-let fireI, spawnI;
-const jetImg=new Image(); jetImg.src="jet.gif";
-const zombieImg=new Image(); zombieImg.src="zombie.png";
+let c=document.getElementById("game")
+let x,y
+let bullets=[]
+let zombies=[]
+let powerups=[]
+let firePlus=0
+let kills=0
+let minds=save.minds
 
 function startGame(){
- player={x:canvas.width/2,y:canvas.height-80};
- bullets=[];zombies=[];score=0;HP=100;coins=0;minds=0;
- document.getElementById("hp").innerText=HP;
- document.getElementById("scoreGame").innerText=score;
- document.getElementById("coins").innerText=coins;
- document.getElementById("minds").innerText=minds;
- menu.style.display="none"; canvas.style.display="block"; gameTop.style.display="flex";
- fireI=setInterval(autoFire,200); spawnI=setInterval(spawnZombie,1200); requestAnimationFrame(loop);
+document.getElementById("menu").style.display="none"
+centerStats.style.display="none"
+
+c.style.display="block"
+c.width=innerWidth
+c.height=innerHeight
+
+x=c.width/2
+y=c.height-80
+
+loop()
+spawn()
 }
 
-/* AUTO FIRE */
-function autoFire(){for(let i=0;i<(doubleFire?2:1);i++) bullets.push({x:player.x+i*10-5,y:player.y});}
+c.addEventListener("touchmove",e=>{
+x=e.touches[0].clientX
+})
 
-/* SPAWN ZOMBIE */
-function spawnZombie(){
- let z={x:Math.random()*(canvas.width-50)+25,y:-40,hp:50};
- zombies.push(z);
-}
-
-/* LOOP */
 function loop(){
- ctx.clearRect(0,0,canvas.width,canvas.height);
- ctx.drawImage(jetImg,player.x-20,player.y-20,40,40);
+let g=c.getContext("2d")
+g.clearRect(0,0,c.width,c.height)
 
- bullets.forEach((b,i)=>{b.y-=10;ctx.fillStyle="yellow";ctx.fillRect(b.x,b.y,4,8);if(b.y<0) bullets.splice(i,1);});
+g.fillStyle="cyan"
+g.fillRect(x-10,y-20,20,20)
 
- zombies.forEach((z,zi)=>{
-  z.y+=2;
-  ctx.drawImage(zombieImg,z.x-25,z.y-25,50,50);
+bullets.forEach(b=>{
+b.y-=8
+g.fillStyle="yellow"
+g.fillRect(b.x,b.y,4,8)
+})
 
-  bullets.forEach((b,bi)=>{
-   if(Math.abs(b.x-z.x)<25 && Math.abs(b.y-z.y)<25){
-    z.hp-=25; bullets.splice(bi,1);
-    if(z.hp<=0){
-     zombies.splice(zi,1);
-     score+=10; coins+=10; document.getElementById("scoreGame").innerText=score;
-     document.getElementById("coins").innerText=coins;
-     // RANDOM MINDS DROP
-     if(Math.random()<0.3){minds+=1;document.getElementById("minds").innerText=minds;}
-    }
-   }
-  });
+zombies.forEach((z,zi)=>{
+z.y+=z.s
+g.fillStyle="green"
+g.fillRect(z.x,z.y,10,10)
 
-  if(Math.abs(player.x-z.x)<25 && Math.abs(player.y-z.y)<25){HP-=35;document.getElementById("hp").innerText=HP;}
- });
+bullets.forEach((b,bi)=>{
+if(Math.abs(b.x-z.x)<10 && Math.abs(b.y-z.y)<10){
+zombies.splice(zi,1)
+bullets.splice(bi,1)
+kills++
+save.kills=kills
 
- if(HP<=0) endGame();
- requestAnimationFrame(loop);
+// random minds drop
+if(Math.random()<0.3){
+minds++
+}
+
+// rare fire plus drop
+if(Math.random()<0.1 && firePlus<5){
+firePlus++
+}
+}
+})
+
+if(Math.abs(z.x-x)<15 && Math.abs(z.y-y)<15){
+endGame()
+}
+})
+
+requestAnimationFrame(loop)
+}
+
+setInterval(()=>{
+bullets.push({x:x,y:y})
+for(let i=0;i<firePlus;i++){
+bullets.push({x:x+(i*6),y:y})
+}
+},200)
+
+function spawn(){
+setInterval(()=>{
+zombies.push({
+x:Math.random()*c.width,
+y:-10,
+s:3
+})
+},1000)
 }
 
 function endGame(){
- clearInterval(fireI); clearInterval(spawnI);
- finalScore.innerText="SCORE: "+score;
- coinsEarned.innerText="COINS EARNED: "+coins;
- mindsEarned.innerText="MINDS COLLECTED: "+minds;
- gameOver.style.display="flex"; canvas.style.display="none"; gameTop.style.display="none";
- if(score>data.high) data.high=score;
- data.coins+=coins;
- data.minds+=minds;
- localStorage.setItem("ZB",JSON.stringify(data));
+save.high=Math.max(save.high,kills)
+save.minds=minds
+localStorage.setItem("zb",JSON.stringify(save))
+location.reload()
 }
 
-/* GAME OVER BUTTONS */
-restartBtn.onclick=startGame;
-backMenuBtn.onclick=()=>{location.reload();}
 </script>
 </body>
 </html>
