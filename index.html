@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zombie Shooter 3D</title>
+<style>
+body { margin:0; overflow:hidden; font-family:sans-serif; }
+#overlay {
+  position:absolute; top:0; left:0; width:100%; height:100%;
+  background:#222; color:white; display:flex; flex-direction:column;
+  justify-content:center; align-items:center;
+  z-index:10;
+}
+button {
+  padding:10px 20px; margin:10px; font-size:18px; cursor:pointer;
+}
+#scoreBoard {
+  position:absolute; top:10px; left:10px; color:white; font-size:20px;
+}
+#coinsBoard {
+  position:absolute; top:10px; right:10px; color:yellow; font-size:20px;
+}
+</style>
+</head>
+<body>
+<div id="overlay">
+  <h1>Zombie Shooter</h1>
+  <button onclick="startGame()">Play</button>
+  <button onclick="openShop()">Shop</button>
+</div>
+<div id="scoreBoard">Score: 0</div>
+<div id="coinsBoard">Coins: 0</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/PointerLockControls.js"></script>
+
+<script>
+let scene, camera, renderer, controls;
+let player = {health:100, score:0, coins:0};
+let zombies = [];
+let bullets = [];
+let wave = 1;
+let gameStarted = false;
+
+// INIT
+function init() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x87ceeb);
+
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    
+    renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Light
+    const light = new THREE.DirectionalLight(0xffffff,1);
+    light.position.set(0,50,50);
+    scene.add(light);
+
+    // Ground
+    const groundMat = new THREE.MeshStandardMaterial({color:0x228B22});
+    const groundGeo = new THREE.BoxGeometry(100,1,100);
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.position.y=-0.5;
+    scene.add(ground);
+
+    // Player controls
+    controls = new THREE.PointerLockControls(camera, document.body);
+
+    document.addEventListener('click', () => {
+      if(!gameStarted) return;
+      controls.lock();
+    });
+
+    // Spawn zombies periodically
+    setInterval(spawnZombie, 3000);
+
+    animate();
+}
+
+// SPAWN ZOMBIE
+function spawnZombie() {
+    if(!gameStarted) return;
+    const geo = new THREE.BoxGeometry(1,2,1);
+    const mat = new THREE.MeshStandardMaterial({color:0xff0000});
+    const zombie = new THREE.Mesh(geo, mat);
+    zombie.position.set(Math.random()*50-25,1,Math.random()*50-25);
+    zombie.health = 50 + wave*10;
+    zombies.push(zombie);
+    scene.add(zombie);
+}
+
+// SHOOT
+document.addEventListener('mousedown', ()=> {
+    if(!gameStarted) return;
+    const bulletGeo = new THREE.SphereGeometry(0.1,8,8);
+    const bulletMat = new THREE.MeshBasicMaterial({color:0xffff00});
+    const bullet = new THREE.Mesh(bulletGeo, bulletMat);
+    bullet.position.copy(camera.position);
+    bullet.direction = new THREE.Vector3();
+    camera.getWorldDirection(bullet.direction);
+    bullets.push(bullet);
+    scene.add(bullet);
+});
+
+// ANIMATE
+function animate() {
+    requestAnimationFrame(animate);
+
+    if(gameStarted){
+        // Move zombies toward player
+        zombies.forEach((z,i)=>{
+            const dir = new THREE.Vector3();
+            dir.subVectors(camera.position, z.position).normalize();
+            z.position.add(dir.multiplyScalar(0.02));
+            // Check hit
+            if(z.position.distanceTo(camera.position)<1){
+                player.health -= 0.1;
+            }
+        });
+
+        // Move bullets
+        bullets.forEach((b,i)=>{
+            b.position.add(b.direction.clone().multiplyScalar(0.5));
+            zombies.forEach((z,j)=>{
+                if(b.position.distanceTo(z.position)<1){
+                    z.health -= 50;
+                    scene.remove(b);
+                    bullets.splice(i,1);
+                    if(z.health<=0){
+                        player.score += 50;
+                        player.coins += 50;
+                        scene.remove(z);
+                        zombies.splice(j,1);
+                    }
+                }
+            });
+        });
+
+        // Update UI
+        document.getElementById('scoreBoard').innerText = 'Score: '+Math.floor(player.score);
+        document.getElementById('coinsBoard').innerText = 'Coins: '+Math.floor(player.coins);
+    }
+
+    renderer.render(scene,camera);
+}
+
+// START GAME
+function startGame() {
+    gameStarted = true;
+    player.health=100;
+    document.getElementById('overlay').style.display='none';
+}
+
+// SHOP
+function openShop() {
+    alert("Shop coming soon! Equip guns here!");
+}
+
+init();
+</script>
+</body>
+</html>
