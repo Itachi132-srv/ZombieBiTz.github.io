@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Zombie BiTz - Image Version</title>
+<title>Zombie BiTz</title>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Press+Start+2P&display=swap');
@@ -15,7 +15,12 @@ body{
   font-family:'Orbitron',sans-serif;
 }
 
-#overlay,#gameOverOverlay{
+button{
+  cursor:pointer;
+}
+
+/* OVERLAYS */
+.overlay{
   position:absolute;
   top:0;left:0;width:100%;height:100%;
   display:flex;
@@ -25,65 +30,146 @@ body{
   z-index:10;
 }
 
-#overlay{background:#000;color:#88ff88;}
-#gameOverOverlay{background:rgba(0,0,0,0.9);color:#ff5050;display:none;}
-
-#overlay h1,#gameOverOverlay h1{
-  font-family:'Press Start 2P',cursive;
-  font-size:3em;
+#menu{
+  background:#000;
+  color:#88ff88;
 }
 
-#overlay button,#gameOverOverlay button{
-  font-size:1.2em;
-  padding:12px 35px;
+#gameOver{
+  background:rgba(0,0,0,0.9);
+  color:#ff5050;
+  display:none;
+}
+
+#shop{
+  background:#000;
+  color:#4fc3ff;
+  display:none;
+}
+
+h1{
+  font-family:'Press Start 2P',cursive;
+  font-size:2.5em;
+  margin-bottom:20px;
+}
+
+.menuBtn{
+  font-family:'Press Start 2P';
+  font-size:1em;
+  padding:15px 40px;
   margin:10px;
   border:none;
-  border-radius:10px;
-  background:#333;
+  border-radius:12px;
+  background:#222;
   color:#fff;
 }
 
-#restartBtn::before{content:"↻ ";}
-#menuBtn::before{content:"⌂ ";}
+.menuBtn:hover{
+  background:#4fc3ff;
+  color:#000;
+}
 
+/* SHOP */
+.shopRow{
+  display:flex;
+  gap:20px;
+  margin-top:20px;
+}
+
+.jet{
+  border:2px solid #4fc3ff;
+  padding:15px;
+  border-radius:12px;
+  text-align:center;
+  width:120px;
+}
+
+.jet img{
+  width:80px;
+  height:80px;
+}
+
+.price{
+  color:#ffd54f;
+  margin-top:8px;
+  font-size:14px;
+}
+
+/* GAME UI */
 canvas{display:block;}
 
-#fireBtn{
-  position:absolute;bottom:20px;right:20px;
-  width:80px;height:80px;
+#fireBtn,#leftBtn,#rightBtn{
+  position:absolute;
+  bottom:20px;
   border:2px solid #fff;
-  border-radius:40px;
   background:transparent;
   color:white;
 }
 
+#fireBtn{
+  right:20px;
+  width:80px;height:80px;
+  border-radius:40px;
+}
+
 #leftBtn,#rightBtn{
-  position:absolute;bottom:20px;
   width:60px;height:60px;
-  border:2px solid #fff;
   border-radius:30px;
-  background:transparent;
-  color:white;
 }
 
 #leftBtn{left:20px;}
 #rightBtn{left:100px;}
+
+#restartBtn::before{content:"↻ ";}
+#menuBtn::before{content:"⌂ ";}
 </style>
 </head>
 
 <body>
 
-<div id="overlay">
+<!-- MAIN MENU -->
+<div id="menu" class="overlay">
   <h1>Zombie BiTz</h1>
-  <button onclick="startGame()">Play</button>
-  <button onclick="quitGame()">Quit</button>
+  <p>🪙 Coins: <span id="coinDisplay">0</span></p>
+  <p>🏆 High Score: <span id="highScoreDisplay">0</span></p>
+  <button class="menuBtn" onclick="startGame()">PLAY</button>
+  <button class="menuBtn" onclick="openShop()">SHOP</button>
+  <button class="menuBtn" onclick="quitGame()">QUIT</button>
 </div>
 
-<div id="gameOverOverlay">
-  <h1>Defeat ☠</h1>
-  <p id="finalScore">Score: 0</p>
-  <button id="restartBtn" onclick="restartGame()">Restart</button>
-  <button id="menuBtn" onclick="backToMenu()">Main Menu</button>
+<!-- SHOP -->
+<div id="shop" class="overlay">
+  <h1>JET SHOP</h1>
+
+  <div class="shopRow">
+    <div class="jet">
+      <img src="slime.png">
+      <div>Slime Jet</div>
+      <div class="price">5,000 Coins</div>
+    </div>
+
+    <div class="jet">
+      <img src="fire.png">
+      <div>Fire Jet</div>
+      <div class="price">12,000 Coins</div>
+    </div>
+
+    <div class="jet">
+      <img src="shardex.png">
+      <div>Shardex Jet</div>
+      <div class="price">70,000 Coins</div>
+    </div>
+  </div>
+
+  <button class="menuBtn" onclick="closeShop()">BACK</button>
+</div>
+
+<!-- GAME OVER -->
+<div id="gameOver" class="overlay">
+  <h1>DEFEAT ☠</h1>
+  <p>Score: <span id="finalScore">0</span></p>
+  <button class="menuBtn" id="restartBtn" onclick="restartGame()">RESTART</button>
+  <button class="menuBtn" id="menuBtn" onclick="backToMenu()">MAIN MENU</button>
 </div>
 
 <canvas id="gameCanvas"></canvas>
@@ -92,27 +178,32 @@ canvas{display:block;}
 <button id="rightBtn">▶</button>
 
 <script>
-const canvas=document.getElementById('gameCanvas');
-const ctx=canvas.getContext('2d');
-canvas.width=innerWidth;
-canvas.height=innerHeight;
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+canvas.width = innerWidth;
+canvas.height = innerHeight;
 
-let player={x:canvas.width/2,y:canvas.height-50,width:40,height:40,speed:7,score:0};
+let coins = parseInt(localStorage.getItem("coins")) || 0;
+let highScore = parseInt(localStorage.getItem("highScore")) || 0;
+
+coinDisplay.innerText = coins;
+highScoreDisplay.innerText = highScore;
+
+let player={x:canvas.width/2,y:canvas.height-50,speed:7,score:0};
 let bullets=[],zombies=[];
-let gameStarted=false,enemySpawnInterval,moveDir=0;
+let gameStarted=false,enemySpawn,moveDir=0;
 
-const zombieImg=new Image(); zombieImg.src='zombie.png';
-const playerImg=new Image(); playerImg.src='jet.png';
-const bgImg=new Image(); bgImg.src='background.png';
+const zombieImg=new Image(); zombieImg.src="zombie.png";
+const playerImg=new Image(); playerImg.src="jet.png";
+const bgImg=new Image(); bgImg.src="background.png";
 
-/* MOBILE CONTROLS */
+/* CONTROLS */
 leftBtn.ontouchstart=()=>moveDir=-1;
 leftBtn.ontouchend=()=>moveDir=0;
 rightBtn.ontouchstart=()=>moveDir=1;
 rightBtn.ontouchend=()=>moveDir=0;
 fireBtn.ontouchstart=fireBullet;
 
-/* PC / LAPTOP KEYBOARD CONTROLS */
 document.addEventListener("keydown",e=>{
   if(e.code==="ArrowLeft") moveDir=-1;
   if(e.code==="ArrowRight") moveDir=1;
@@ -120,18 +211,13 @@ document.addEventListener("keydown",e=>{
 });
 
 document.addEventListener("keyup",e=>{
-  if(e.code==="ArrowLeft"||e.code==="ArrowRight") moveDir=0;
+  if(e.code.includes("Arrow")) moveDir=0;
 });
 
 function gameLoop(){
   if(!gameStarted) return;
 
-  if(bgImg.complete){
-    ctx.drawImage(bgImg,0,0,canvas.width,canvas.height);
-  }else{
-    ctx.fillStyle="#000";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-  }
+  ctx.drawImage(bgImg,0,0,canvas.width,canvas.height);
 
   player.x+=player.speed*moveDir;
   player.x=Math.max(20,Math.min(canvas.width-20,player.x));
@@ -149,6 +235,8 @@ function gameLoop(){
         bullets.splice(i,1);
         zombies.splice(j,1);
         player.score+=10;
+        coins+=10;
+        localStorage.setItem("coins",coins);
       }
     });
   });
@@ -160,18 +248,14 @@ function gameLoop(){
   });
 
   ctx.fillStyle="#fff";
-  ctx.font="20px Orbitron";
   ctx.fillText("Score: "+player.score,10,30);
+  ctx.fillText("Coins: "+coins,10,55);
 
   requestAnimationFrame(gameLoop);
 }
 
 function spawnZombie(){
-  zombies.push({
-    x:Math.random()*(canvas.width-60)+30,
-    y:-40,
-    speed:2+Math.random()
-  });
+  zombies.push({x:Math.random()*(canvas.width-60)+30,y:-40,speed:2+Math.random()});
 }
 
 function fireBullet(){
@@ -180,22 +264,32 @@ function fireBullet(){
 }
 
 function startGame(){
+  menu.style.display="none";
   gameStarted=true;
   bullets=[];zombies=[];player.score=0;
-  overlay.style.display="none";
-  enemySpawnInterval=setInterval(spawnZombie,1000);
+  enemySpawn=setInterval(spawnZombie,1000);
   gameLoop();
 }
 
 function gameOver(){
-  clearInterval(enemySpawnInterval);
+  clearInterval(enemySpawn);
   gameStarted=false;
-  finalScore.innerText="Score: "+player.score;
-  gameOverOverlay.style.display="flex";
+  finalScore.innerText=player.score;
+
+  if(player.score>highScore){
+    highScore=player.score;
+    localStorage.setItem("highScore",highScore);
+  }
+
+  highScoreDisplay.innerText=highScore;
+  coinDisplay.innerText=coins;
+  gameOver.style.display="flex";
 }
 
-function restartGame(){gameOverOverlay.style.display="none";startGame();}
-function backToMenu(){gameOverOverlay.style.display="none";overlay.style.display="flex";}
+function restartGame(){gameOver.style.display="none";startGame();}
+function backToMenu(){gameOver.style.display="none";menu.style.display="flex";}
+function openShop(){menu.style.display="none";shop.style.display="flex";}
+function closeShop(){shop.style.display="none";menu.style.display="flex";}
 function quitGame(){location.reload();}
 </script>
 
