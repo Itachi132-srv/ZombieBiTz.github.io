@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Zombie BiTz</title>
+<title>Zombie BiTz - Image Version</title>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Press+Start+2P&display=swap');
@@ -15,9 +15,7 @@ body{
   font-family:'Orbitron',sans-serif;
 }
 
-button{cursor:pointer;}
-
-.overlay{
+#overlay,#gameOverOverlay,#shopOverlay{
   position:absolute;
   top:0;left:0;width:100%;height:100%;
   display:flex;
@@ -27,29 +25,53 @@ button{cursor:pointer;}
   z-index:10;
 }
 
-#menu{background:#000;color:#88ff88;}
-#gameOver{background:rgba(0,0,0,0.9);color:#ff5050;display:none;}
-#shop{background:#000;color:#4fc3ff;display:none;overflow-x:auto;padding:20px;}
+#overlay{background:#000;color:#88ff88;}
+#gameOverOverlay{background:rgba(0,0,0,0.9);color:#ff5050;display:none;}
+#shopOverlay{background:#000;color:#4fc3ff;display:none;overflow-x:auto;padding:20px;}
 
-h1{font-family:'Press Start 2P',cursive;font-size:2.5em;margin-bottom:20px;}
-.menuBtn{
-  font-family:'Press Start 2P';
-  font-size:1em;
-  padding:15px 40px;
+h1{font-family:'Press Start 2P',cursive;font-size:3em;margin-bottom:20px;}
+
+button{
+  font-size:1.2em;
+  padding:12px 35px;
   margin:10px;
   border:none;
-  border-radius:12px;
-  background:#222;
+  border-radius:10px;
+  background:#333;
   color:#fff;
+  cursor:pointer;
 }
-.menuBtn:hover{background:#4fc3ff;color:#000;}
+
+#restartBtn::before{content:"↻ ";}
+#menuBtn::before{content:"⌂ ";}
+
+canvas{display:block;}
+
+#fireBtn{
+  position:absolute;bottom:20px;right:20px;
+  width:80px;height:80px;
+  border:2px solid #fff;
+  border-radius:40px;
+  background:transparent;
+  color:white;
+}
+
+#leftBtn,#rightBtn{
+  position:absolute;bottom:20px;
+  width:60px;height:60px;
+  border:2px solid #fff;
+  border-radius:30px;
+  background:transparent;
+  color:white;
+}
+
+#leftBtn{left:20px;}
+#rightBtn{left:100px;}
 
 .shopRow{
   display:flex;
   gap:20px;
   flex-wrap:nowrap;
-  overflow-x:auto;
-  padding-bottom:10px;
 }
 
 .jet{
@@ -63,66 +85,49 @@ h1{font-family:'Press Start 2P',cursive;font-size:2.5em;margin-bottom:20px;}
 
 .jet img{width:80px;height:80px;}
 .price{color:#ffd54f;margin-top:8px;font-size:14px;}
-
-canvas{display:block;}
-
-#fireBtn,#leftBtn,#rightBtn{
-  position:absolute;
-  bottom:20px;
-  border:2px solid #fff;
-  background:transparent;
-  color:white;
-}
-#fireBtn{right:20px;width:80px;height:80px;border-radius:40px;}
-#leftBtn,#rightBtn{width:60px;height:60px;border-radius:30px;}
-#leftBtn{left:20px;}
-#rightBtn{left:100px;}
-#restartBtn::before{content:"↻ ";}
-#menuBtn::before{content:"⌂ ";}
 </style>
 </head>
 
 <body>
 
-<div id="menu" class="overlay">
+<div id="overlay">
   <h1>Zombie BiTz</h1>
   <p>🪙 Coins: <span id="coinDisplay">0</span></p>
-  <p>🏆 High Score: <span id="highScoreDisplay">0</span></p>
-  <button class="menuBtn" onclick="startGame()">PLAY</button>
-  <button class="menuBtn" onclick="openShop()">SHOP</button>
-  <button class="menuBtn" onclick="quitGame()">QUIT</button>
+  <button onclick="startGame()">Play</button>
+  <button onclick="openShop()">Shop</button>
+  <button onclick="quitGame()">Quit</button>
 </div>
 
-<div id="shop" class="overlay">
-  <h1>JET SHOP</h1>
+<div id="shopOverlay">
+  <h1>Jet Shop</h1>
   <div class="shopRow">
     <div class="jet" data-jet="slime" data-price="5000">
       <img src="slime.png">
       <div>Slime Jet</div>
       <div class="price">5,000 Coins</div>
-      <button onclick="buyJet('slime',5000)">BUY</button>
+      <button onclick="buyJet('slime',5000)">Buy</button>
     </div>
     <div class="jet" data-jet="fire" data-price="12000">
       <img src="fire.png">
       <div>Fire Jet</div>
       <div class="price">12,000 Coins</div>
-      <button onclick="buyJet('fire',12000)">BUY</button>
+      <button onclick="buyJet('fire',12000)">Buy</button>
     </div>
     <div class="jet" data-jet="shardex" data-price="70000">
       <img src="shardex.png">
       <div>Shardex Jet</div>
       <div class="price">70,000 Coins</div>
-      <button onclick="buyJet('shardex',70000)">BUY</button>
+      <button onclick="buyJet('shardex',70000)">Buy</button>
     </div>
   </div>
-  <button class="menuBtn" onclick="closeShop()">BACK</button>
+  <button onclick="closeShop()">Back</button>
 </div>
 
-<div id="gameOver" class="overlay">
-  <h1>DEFEAT ☠</h1>
-  <p>Score: <span id="finalScore">0</span></p>
-  <button class="menuBtn" onclick="restartGame()">RESTART</button>
-  <button class="menuBtn" onclick="backToMenu()">MAIN MENU</button>
+<div id="gameOverOverlay">
+  <h1>Defeat ☠</h1>
+  <p id="finalScore">Score: 0</p>
+  <button id="restartBtn" onclick="restartGame()">Restart</button>
+  <button id="menuBtn" onclick="backToMenu()">Main Menu</button>
 </div>
 
 <canvas id="gameCanvas"></canvas>
@@ -131,37 +136,38 @@ canvas{display:block;}
 <button id="rightBtn">▶</button>
 
 <script>
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-canvas.width = innerWidth;
-canvas.height = innerHeight;
+const canvas=document.getElementById('gameCanvas');
+const ctx=canvas.getContext('2d');
+canvas.width=innerWidth;
+canvas.height=innerHeight;
 
-let coins = parseInt(localStorage.getItem("coins")) || 0;
-let highScore = parseInt(localStorage.getItem("highScore")) || 0;
-let selectedJet = localStorage.getItem("jet") || "slime";
+let coins=parseInt(localStorage.getItem("coins"))||0;
+let selectedJet=localStorage.getItem("jet")||"jet";
 
-coinDisplay.innerText = coins;
-highScoreDisplay.innerText = highScore;
+coinDisplay.innerText=coins;
 
-let player={x:canvas.width/2,y:canvas.height-50,speed:7,score:0};
+let player={x:canvas.width/2,y:canvas.height-50,width:40,height:40,speed:7,score:0};
 let bullets=[],zombies=[];
-let gameStarted=false,enemySpawn,moveDir=0;
+let gameStarted=false,enemySpawnInterval,moveDir=0;
 
-const zombieImg=new Image(); zombieImg.src="zombie.png";
-const playerImg=new Image(); 
-const bgImg=new Image(); bgImg.src="background.png";
+const zombieImg=new Image(); zombieImg.src='zombie.png';
+const playerImg=new Image();
+const bgImg=new Image(); bgImg.src='background.png';
 
+// set player jet image
 function updatePlayerImg(){
-  playerImg.src = selectedJet + "jet.png";
+  playerImg.src = selectedJet + ".png"; // ← yahan PNG ka naam rakh sakte ho, jaise slime.png
 }
+updatePlayerImg();
 
-/* CONTROLS */
+/* MOBILE CONTROLS */
 leftBtn.ontouchstart=()=>moveDir=-1;
 leftBtn.ontouchend=()=>moveDir=0;
 rightBtn.ontouchstart=()=>moveDir=1;
 rightBtn.ontouchend=()=>moveDir=0;
 fireBtn.ontouchstart=fireBullet;
 
+/* PC / LAPTOP KEYBOARD CONTROLS */
 document.addEventListener("keydown",e=>{
   if(e.code==="ArrowLeft") moveDir=-1;
   if(e.code==="ArrowRight") moveDir=1;
@@ -169,7 +175,7 @@ document.addEventListener("keydown",e=>{
 });
 
 document.addEventListener("keyup",e=>{
-  if(e.code.includes("Arrow")) moveDir=0;
+  if(e.code==="ArrowLeft"||e.code==="ArrowRight") moveDir=0;
 });
 
 function gameLoop(){
@@ -177,11 +183,13 @@ function gameLoop(){
 
   if(bgImg.complete){
     ctx.drawImage(bgImg,0,0,canvas.width,canvas.height);
-  } else { ctx.fillStyle="#000"; ctx.fillRect(0,0,canvas.width,canvas.height); }
+  }else{
+    ctx.fillStyle="#000";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+  }
 
   player.x+=player.speed*moveDir;
   player.x=Math.max(20,Math.min(canvas.width-20,player.x));
-  updatePlayerImg();
   ctx.drawImage(playerImg,player.x-20,player.y-20,40,40);
 
   bullets.forEach((b,i)=>{
@@ -198,6 +206,7 @@ function gameLoop(){
         player.score+=10;
         coins+=10;
         localStorage.setItem("coins",coins);
+        coinDisplay.innerText=coins;
       }
     });
   });
@@ -209,6 +218,7 @@ function gameLoop(){
   });
 
   ctx.fillStyle="#fff";
+  ctx.font="20px Orbitron";
   ctx.fillText("Score: "+player.score,10,30);
   ctx.fillText("Coins: "+coins,10,55);
 
@@ -225,50 +235,43 @@ function fireBullet(){
 }
 
 function startGame(){
-  menu.style.display="none";
-  gameOver.style.display="none";
-  shop.style.display="none";
   gameStarted=true;
   bullets=[];zombies=[];player.score=0;
+  overlay.style.display="none";
+  shopOverlay.style.display="none";
   updatePlayerImg();
-  enemySpawn=setInterval(spawnZombie,1000);
+  enemySpawnInterval=setInterval(spawnZombie,1000);
   gameLoop();
 }
 
 function gameOver(){
-  clearInterval(enemySpawn);
+  clearInterval(enemySpawnInterval);
   gameStarted=false;
-  finalScore.innerText=player.score;
-
-  if(player.score>highScore){
-    highScore = player.score;
-    localStorage.setItem("highScore",highScore);
-  }
-
-  highScoreDisplay.innerText=highScore;
-  coinDisplay.innerText=coins;
-  gameOver.style.display="flex";
+  finalScore.innerText="Score: "+player.score;
+  gameOverOverlay.style.display="flex";
 }
 
-function restartGame(){gameOver.style.display="none";startGame();}
-function backToMenu(){gameOver.style.display="none";menu.style.display="flex";}
-function openShop(){menu.style.display="none";shop.style.display="flex";}
-function closeShop(){shop.style.display="none";menu.style.display="flex";}
+function restartGame(){gameOverOverlay.style.display="none";startGame();}
+function backToMenu(){gameOverOverlay.style.display="none";overlay.style.display="flex";}
 function quitGame(){location.reload();}
 
+function openShop(){overlay.style.display="none"; shopOverlay.style.display="flex";}
+function closeShop(){shopOverlay.style.display="none"; overlay.style.display="flex";}
+
 function buyJet(jet,price){
-  if(coins >= price){
-    coins -= price;
+  if(coins>=price){
+    coins-=price;
     localStorage.setItem("coins",coins);
-    selectedJet = jet;
+    selectedJet=jet;
     localStorage.setItem("jet",jet);
-    alert(jet + " purchased!");
-    coinDisplay.innerText = coins;
+    alert("Congrats! You bought "+jet+" jet!");
+    coinDisplay.innerText=coins;
     closeShop();
-  } else {
-    alert("Not enough coins!");
+  }else{
+    alert("Not enough coins! Keep shooting zombies to earn more! 💰");
   }
 }
 </script>
+
 </body>
 </html>
