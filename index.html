@@ -6,15 +6,13 @@
 <title>Zombie BiTz</title>
 <style>
 body{margin:0;background:#000;color:#fff;font-family:'Orbitron',sans-serif;overflow:hidden}
-*{box-sizing:border-box}
+*{box-sizing:border-box;text-transform:uppercase}
 
 /* MAIN MENU */
-#menu{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:10px;height:100vh;z-index:10;}
+#menu{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:10px;height:100vh;}
 #menuTop{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;}
-#profile{display:flex;align-items:center;gap:10px;cursor:pointer}
-#profile img{width:40px;height:40px;border-radius:8px;border:2px solid cyan}
-#highScore,#coinsBox{font-size:16px;margin:2px;}
-#menuCenter{text-align:center;margin-top:20px;}
+#highScore,#coinsBox,#mindsBox{font-size:16px;margin:2px;}
+#menuCenter{text-align:center;margin-top:30px;font-size:18px;}
 #menuBottom{display:flex;justify-content:space-around;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
 button{padding:12px 18px;border:none;border-radius:12px;font-family:'Orbitron',sans-serif;cursor:pointer;font-size:16px;}
 #shopBtn{background:gold;color:#000;}
@@ -29,7 +27,7 @@ button{padding:12px 18px;border:none;border-radius:12px;font-family:'Orbitron',s
 
 /* GAME HUD */
 #gameTop{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:center;z-index:10;display:none}
-#hpBox,#scoreBox,#coinsGame{background:#111;padding:6px 14px;border-radius:10px;font-size:16px}
+#hpBox,#scoreBoxGame,#coinsGame,#mindsGame{background:#111;padding:6px 12px;border-radius:10px;font-size:16px}
 
 /* GAME OVER */
 #gameOver{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;align-items:center;background:rgba(0,0,0,.95);z-index:30;text-align:center;padding:10px;}
@@ -50,11 +48,12 @@ button{padding:12px 18px;border:none;border-radius:12px;font-family:'Orbitron',s
 <!-- MAIN MENU -->
 <div id="menu">
  <div id="menuTop">
-  <div id="profile" onclick="openProfile()"><img id="pfp"><span id="pname">PLAYER</span></div>
   <div id="highScore">HIGH SCORE: 0</div>
-  <div id="coinsBox">COINS: 0 💰</div>
+  <div id="coinsBox">COINS: 0 🪙</div>
  </div>
- <div id="menuCenter"><h1 style="font-family:'Press Start 2P';font-size:24px;">ZOMBIE BITZ</h1></div>
+ <div id="menuCenter">
+   MINDS COLLECTED: <span id="menuMinds">0</span>
+ </div>
  <div id="menuBottom">
   <button id="shopBtn">SHOP</button>
   <button id="playBtn">PLAY</button>
@@ -62,7 +61,7 @@ button{padding:12px 18px;border:none;border-radius:12px;font-family:'Orbitron',s
  </div>
 </div>
 
-<!-- SETTINGS MENU -->
+<!-- SETTINGS -->
 <div class="overlay" id="settingsUI">
  <h2>SETTINGS</h2>
  <div class="option">Music <button id="musicBtn">OFF</button></div>
@@ -72,119 +71,69 @@ button{padding:12px 18px;border:none;border-radius:12px;font-family:'Orbitron',s
  <button class="btn" onclick="closeAll()">BACK</button>
 </div>
 
-<!-- PROFILE MENU -->
-<div class="overlay" id="profileUI">
- <h2>PROFILE</h2>
- <input id="nameInput" placeholder="ENTER NAME">
- <input type="file" accept="image/*" id="pfpFile">
- <button id="saveProfileBtn" class="btn">SAVE (50k COINS)</button>
- <button class="btn" onclick="closeAll()">BACK</button>
-</div>
-
-<!-- SHOP -->
-<div class="overlay" id="shopUI">
- <h2>SOON...</h2>
- <button class="btn" onclick="closeAll()">BACK</button>
-</div>
-
-<!-- GAME HUD -->
+<!-- GAME -->
 <div id="gameTop">
  <div id="hpBox">HP: <span id="hp">100</span></div>
- <div id="scoreBox">SCORE: <span id="score">0</span></div>
+ <div id="scoreBoxGame">SCORE: <span id="scoreGame">0</span></div>
  <div id="coinsGame">COINS: <span id="coins">0</span></div>
+ <div id="mindsGame">MINDS: <span id="minds">0</span></div>
 </div>
+
+<canvas id="gameCanvas"></canvas>
 
 <!-- GAME OVER -->
 <div id="gameOver">
  <h1>DEFEAT ☠</h1>
  <p id="finalScore">SCORE: 0</p>
  <p id="coinsEarned">COINS EARNED: 0</p>
+ <p id="mindsEarned">MINDS COLLECTED: 0</p>
  <button id="restartBtn">RESTART</button>
  <button id="backMenuBtn">MAIN MENU</button>
 </div>
 
-<canvas id="gameCanvas"></canvas>
-
 <script>
 /* STORAGE */
-let data=JSON.parse(localStorage.getItem("ZB"))||{name:"PLAYER",pfp:"",high:0,coins:0};
-pname.innerText=data.name;
-if(data.pfp) pfp.src=data.pfp;
+let data=JSON.parse(localStorage.getItem("ZB"))||{high:0,coins:0,minds:0};
 document.getElementById("highScore").innerText="HIGH SCORE: "+data.high;
 document.getElementById("coinsBox").innerText="COINS: "+data.coins+" 💰";
-
-/* UI FUNCTIONS */
-function closeAll(){document.querySelectorAll('.overlay').forEach(o=>o.style.display="none");}
-function openSettings(){closeAll();settingsUI.style.display="flex";}
-function openShop(){closeAll();shopUI.style.display="flex";}
-function openProfile(){closeAll();profileUI.style.display="flex";}
-
-/* PROFILE */
-document.getElementById("saveProfileBtn").onclick=function(){
- if(data.coins<50000){alert("YOU NEED 50k COINS"); return;}
- data.coins-=50000;
- data.name=nameInput.value||data.name;
- if(pfpFile.files[0]){
-  let reader=new FileReader();
-  reader.onload=()=>{data.pfp=reader.result;localStorage.setItem("ZB",JSON.stringify(data)); location.reload();}
-  reader.readAsDataURL(pfpFile.files[0]);
- } else {localStorage.setItem("ZB",JSON.stringify(data)); location.reload();}
-}
-
-/* SETTINGS */
-let music=false,sound=false,fps=60;
-musicBtn.onclick=function(){music=!music;this.innerText=music?"ON":"OFF";this.style.backgroundColor=music?"green":"red";}
-soundBtn.onclick=function(){sound=!sound;this.innerText=sound?"ON":"OFF";this.style.backgroundColor=sound?"green":"red";}
-fps30.onclick=function(){fps=30;fps30.style.backgroundColor="green";fps60.style.backgroundColor="red";}
-fps60.onclick=function(){fps=60;fps60.style.backgroundColor="green";fps30.style.backgroundColor="red";}
-saveSettings.onclick=function(){savedTxt.style.display="inline";setTimeout(()=>savedTxt.style.display="none",2000);}
+document.getElementById("menuMinds").innerText=data.minds;
 
 /* MENU BUTTONS */
 playBtn.onclick=startGame;
-shopBtn.onclick=openShop;
-settingsBtn.onclick=openSettings;
+shopBtn.onclick=()=>{alert("SOON")};
+settingsBtn.onclick=()=>{settingsUI.style.display="flex";};
 
-/* GAME OVER BUTTONS */
-restartBtn.onclick=restartGame;
-backMenuBtn.onclick=()=>{location.reload();}
-
-/* GAME LOGIC */
+/* GAME VARIABLES */
 const canvas=document.getElementById("gameCanvas");
 const ctx=canvas.getContext("2d");
 canvas.width=window.innerWidth; canvas.height=window.innerHeight;
 
-let player, bullets=[], zombies=[], wave=1, scoreNum=0, HP=100, doubleFire=false, coinsGame=0, fireI, spawnI;
+let player, bullets=[], zombies=[], score=0, HP=100, coins=0, minds=0, doubleFire=false;
+let fireI, spawnI;
 const jetImg=new Image(); jetImg.src="jet.gif";
 const zombieImg=new Image(); zombieImg.src="zombie.png";
-const bossImg=new Image(); bossImg.src="boss.png";
 
 function startGame(){
- player={x:canvas.width/2,y:canvas.height-80,HP:100};
- bullets=[];zombies=[];wave=1;scoreNum=0;HP=100;doubleFire=false;coinsGame=0;
+ player={x:canvas.width/2,y:canvas.height-80};
+ bullets=[];zombies=[];score=0;HP=100;coins=0;minds=0;
  document.getElementById("hp").innerText=HP;
- document.getElementById("score").innerText=scoreNum;
- document.getElementById("coins").innerText=coinsGame;
- menu.style.display="none";canvas.style.display="block";gameTop.style.display="flex";gameOver.style.display="none";
- fireI=setInterval(autoFire,200); spawnI=setInterval(spawnWave,2000); requestAnimationFrame(loop);
+ document.getElementById("scoreGame").innerText=score;
+ document.getElementById("coins").innerText=coins;
+ document.getElementById("minds").innerText=minds;
+ menu.style.display="none"; canvas.style.display="block"; gameTop.style.display="flex";
+ fireI=setInterval(autoFire,200); spawnI=setInterval(spawnZombie,1200); requestAnimationFrame(loop);
 }
-
-/* CONTROLS */
-canvas.addEventListener("touchmove",e=>player.x=e.touches[0].clientX);
-canvas.addEventListener("mousemove",e=>player.x=e.clientX);
-document.addEventListener("keydown",e=>{if(e.key==="ArrowLeft") player.x-=15; if(e.key==="ArrowRight") player.x+=15; if(e.key===" ") autoFire();});
 
 /* AUTO FIRE */
 function autoFire(){for(let i=0;i<(doubleFire?2:1);i++) bullets.push({x:player.x+i*10-5,y:player.y});}
 
-/* SPAWN WAVE */
-function spawnWave(){
- for(let i=0;i<wave;i++){
-  zombies.push({x:Math.random()*(canvas.width-50)+25,y:-40,hp:50,type:"normal",t:0});
- }
- if(wave<10) wave++;
+/* SPAWN ZOMBIE */
+function spawnZombie(){
+ let z={x:Math.random()*(canvas.width-50)+25,y:-40,hp:50};
+ zombies.push(z);
 }
 
-/* GAME LOOP */
+/* LOOP */
 function loop(){
  ctx.clearRect(0,0,canvas.width,canvas.height);
  ctx.drawImage(jetImg,player.x-20,player.y-20,40,40);
@@ -192,13 +141,19 @@ function loop(){
  bullets.forEach((b,i)=>{b.y-=10;ctx.fillStyle="yellow";ctx.fillRect(b.x,b.y,4,8);if(b.y<0) bullets.splice(i,1);});
 
  zombies.forEach((z,zi)=>{
-  z.y+=2+wave*0.1; z.t++;
+  z.y+=2;
   ctx.drawImage(zombieImg,z.x-25,z.y-25,50,50);
 
   bullets.forEach((b,bi)=>{
    if(Math.abs(b.x-z.x)<25 && Math.abs(b.y-z.y)<25){
     z.hp-=25; bullets.splice(bi,1);
-    if(z.hp<=0){zombies.splice(zi,1);scoreNum+=10;coinsGame+=10;document.getElementById("score").innerText=scoreNum;document.getElementById("coins").innerText=coinsGame;}
+    if(z.hp<=0){
+     zombies.splice(zi,1);
+     score+=10; coins+=10; document.getElementById("scoreGame").innerText=score;
+     document.getElementById("coins").innerText=coins;
+     // RANDOM MINDS DROP
+     if(Math.random()<0.3){minds+=1;document.getElementById("minds").innerText=minds;}
+    }
    }
   });
 
@@ -211,13 +166,19 @@ function loop(){
 
 function endGame(){
  clearInterval(fireI); clearInterval(spawnI);
- finalScore.innerText="SCORE: "+scoreNum;
- coinsEarned.innerText="COINS EARNED: "+coinsGame;
- gameOver.style.display="flex";canvas.style.display="none";gameTop.style.display="none";
- if(scoreNum>data.high){data.high=scoreNum;data.coins+=coinsGame;localStorage.setItem("ZB",JSON.stringify(data));}
+ finalScore.innerText="SCORE: "+score;
+ coinsEarned.innerText="COINS EARNED: "+coins;
+ mindsEarned.innerText="MINDS COLLECTED: "+minds;
+ gameOver.style.display="flex"; canvas.style.display="none"; gameTop.style.display="none";
+ if(score>data.high) data.high=score;
+ data.coins+=coins;
+ data.minds+=minds;
+ localStorage.setItem("ZB",JSON.stringify(data));
 }
 
-function restartGame(){player=null;startGame();}
+/* GAME OVER BUTTONS */
+restartBtn.onclick=startGame;
+backMenuBtn.onclick=()=>{location.reload();}
 </script>
 </body>
 </html>
