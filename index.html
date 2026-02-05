@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Zombie BiTz - Professional</title>
+<title>Zombie BiTz - Image Version</title>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Press+Start+2P&display=swap');
@@ -11,162 +11,89 @@
 body{
   margin:0;
   overflow:hidden;
-  background:#111;
+  background:#000;
   font-family:'Orbitron',sans-serif;
-  color:#fff;
 }
 
-/* Canvas always at bottom */
-canvas{
-  display:block;
-  background:#111;
-  position:fixed;
-  top:0;
-  left:0;
-  z-index:1;
-}
-
-/* Overlays above everything */
 #overlay,#gameOverOverlay,#shopOverlay{
-  position:fixed;
+  position:absolute;
   top:0;left:0;width:100%;height:100%;
   display:flex;
   flex-direction:column;
   justify-content:center;
   align-items:center;
-  z-index:100;
-  backdrop-filter: blur(6px);
-  background:rgba(0,0,0,0.85);
-  overflow-x:hidden;
-  overflow-y:auto;
+  z-index:10;
 }
 
-/* Titles */
-h1{
-  font-family:'Press Start 2P',cursive;
-  font-size:3em;
-  margin-bottom:20px;
-  color:#4fc3ff;
-  text-shadow:0 0 15px #4fc3ff,0 0 20px #00bcd4;
-}
+#overlay{background:#000;color:#88ff88;}
+#gameOverOverlay{background:rgba(0,0,0,0.9);color:#ff5050;display:none;}
+#shopOverlay{background:#000;color:#4fc3ff;display:none;overflow-x:auto;padding:20px;}
 
-/* Buttons */
+h1{font-family:'Press Start 2P',cursive;font-size:3em;margin-bottom:20px;}
+
 button{
   font-family:'Orbitron',sans-serif;
   font-size:1.2em;
   padding:12px 35px;
   margin:10px;
   border:none;
-  border-radius:12px;
-  background:#222;
+  border-radius:10px;
+  background:#444;
   color:#fff;
   cursor:pointer;
   transition: all 0.2s ease;
-  box-shadow:0 4px 8px rgba(0,0,0,0.5);
 }
 button:hover{
   background:#4fc3ff;
   color:#000;
-  transform:scale(1.05);
-}
-button:active{
-  transform:scale(0.98);
 }
 
-/* Special buttons */
-#restartBtn::before{content:"↻ ";}
-#menuBtn::before{content:"⌂ ";}
-
-/* FIRE Button */
 #fireBtn{
-  position:fixed;
-  bottom:20px;right:20px;
+  position:absolute;bottom:20px;right:20px;
   width:80px;height:80px;
   border:2px solid #fff;
-  border-radius:50%;
+  border-radius:40px;
   background:transparent;
   color:white;
-  font-family:Arial,sans-serif;
+  font-family:Arial, sans-serif; /* NORMAL FONT */
   font-weight:normal;
   font-size:18px;
-  cursor:pointer;
-  z-index:50;
-}
-#fireBtn:hover{
-  color:#4fc3ff;
-  border-color:#4fc3ff;
 }
 
-/* Movement Buttons */
 #leftBtn,#rightBtn{
-  position:fixed;
-  bottom:20px;
+  position:absolute;bottom:20px;
   width:60px;height:60px;
   border:2px solid #fff;
-  border-radius:50%;
+  border-radius:30px;
   background:transparent;
   color:white;
-  z-index:50;
 }
+
 #leftBtn{left:20px;}
 #rightBtn{left:100px;}
 
-/* Coins & Score display */
-#coinDisplay{
-  font-size:1.2em;
-  padding:6px 12px;
-  background:rgba(0,0,0,0.7);
-  border-radius:8px;
-  border:2px solid #4fc3ff;
-  color:#ffd54f;
-  margin-bottom:15px;
-  box-shadow:0 0 10px #ffd54f;
-}
-
-/* Shop overlay */
-#shopOverlay{
-  display:none;
-  flex-direction:column;
-  padding:20px;
-}
 .shopRow{
   display:flex;
-  gap:25px;
+  gap:20px;
   flex-wrap:nowrap;
-  overflow-x:auto;
-  padding-bottom:20px;
-  width:100%;
-  justify-content:flex-start;
 }
+
 .jet{
   flex:0 0 auto;
   border:2px solid #4fc3ff;
-  border-radius:12px;
   padding:15px;
+  border-radius:12px;
   text-align:center;
-  width:140px;
-  background:rgba(0,0,0,0.8);
-  transition: all 0.2s ease;
+  width:120px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .jet:hover{
   transform:scale(1.1);
-  box-shadow:0 0 15px #4fc3ff;
-}
-.jet img{
-  width:80px;
-  height:80px;
-  margin-bottom:10px;
-}
-.price{
-  font-size:14px;
-  color:#ffd54f;
-  margin:5px 0;
+  box-shadow:0 0 10px #4fc3ff;
 }
 
-/* Overlay text spacing fix */
-#overlay p,#gameOverOverlay p{
-  margin:5px 0 20px;
-}
+.jet img{width:80px;height:80px;}
+.price{color:#ffd54f;margin-top:8px;font-size:14px;}
 </style>
 </head>
 
@@ -236,22 +163,25 @@ const zombieImg=new Image(); zombieImg.src='zombie.png';
 const playerImg=new Image();
 const bgImg=new Image(); bgImg.src='background.png';
 
-function updatePlayerImg(){ playerImg.src = selectedJet + ".png"; }
+function updatePlayerImg(){
+  playerImg.src = selectedJet + ".png"; // ← yahan tum player ka PNG name rakh sakte ho
+}
 updatePlayerImg();
 
-/* Mobile controls */
+/* MOBILE CONTROLS */
 leftBtn.ontouchstart=()=>moveDir=-1;
 leftBtn.ontouchend=()=>moveDir=0;
 rightBtn.ontouchstart=()=>moveDir=1;
 rightBtn.ontouchend=()=>moveDir=0;
 fireBtn.ontouchstart=fireBullet;
 
-/* Keyboard controls */
+/* PC / LAPTOP KEYBOARD CONTROLS */
 document.addEventListener("keydown",e=>{
   if(e.code==="ArrowLeft") moveDir=-1;
   if(e.code==="ArrowRight") moveDir=1;
   if(e.code==="Space") fireBullet();
 });
+
 document.addEventListener("keyup",e=>{
   if(e.code==="ArrowLeft"||e.code==="ArrowRight") moveDir=0;
 });
@@ -259,8 +189,12 @@ document.addEventListener("keyup",e=>{
 function gameLoop(){
   if(!gameStarted) return;
 
-  if(bgImg.complete){ ctx.drawImage(bgImg,0,0,canvas.width,canvas.height); }
-  else{ ctx.fillStyle="#111"; ctx.fillRect(0,0,canvas.width,canvas.height); }
+  if(bgImg.complete){
+    ctx.drawImage(bgImg,0,0,canvas.width,canvas.height);
+  }else{
+    ctx.fillStyle="#000";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+  }
 
   player.x+=player.speed*moveDir;
   player.x=Math.max(20,Math.min(canvas.width-20,player.x));
@@ -299,29 +233,51 @@ function gameLoop(){
   requestAnimationFrame(gameLoop);
 }
 
-function spawnZombie(){ zombies.push({x:Math.random()*(canvas.width-60)+30,y:-40,speed:2+Math.random()}); }
-function fireBullet(){ if(!gameStarted) return; bullets.push({x:player.x,y:player.y-20}); }
+function spawnZombie(){
+  zombies.push({x:Math.random()*(canvas.width-60)+30,y:-40,speed:2+Math.random()});
+}
+
+function fireBullet(){
+  if(!gameStarted) return;
+  bullets.push({x:player.x,y:player.y-20});
+}
 
 function startGame(){
-  gameStarted=true; bullets=[]; zombies=[]; player.score=0;
-  overlay.style.display="none"; shopOverlay.style.display="none";
-  updatePlayerImg(); enemySpawnInterval=setInterval(spawnZombie,1000); gameLoop();
+  gameStarted=true;
+  bullets=[];zombies=[];player.score=0;
+  overlay.style.display="none";
+  shopOverlay.style.display="none";
+  updatePlayerImg();
+  enemySpawnInterval=setInterval(spawnZombie,1000);
+  gameLoop();
 }
-function gameOver(){ clearInterval(enemySpawnInterval); gameStarted=false; finalScore.innerText="Score: "+player.score; gameOverOverlay.style.display="flex"; }
-function restartGame(){ gameOverOverlay.style.display="none"; startGame(); }
-function backToMenu(){ gameOverOverlay.style.display="none"; overlay.style.display="flex"; }
-function quitGame(){ location.reload(); }
 
-function openShop(){ overlay.style.display="none"; shopOverlay.style.display="flex"; }
-function closeShop(){ shopOverlay.style.display="none"; overlay.style.display="flex"; }
+function gameOver(){
+  clearInterval(enemySpawnInterval);
+  gameStarted=false;
+  finalScore.innerText="Score: "+player.score;
+  gameOverOverlay.style.display="flex";
+}
+
+function restartGame(){gameOverOverlay.style.display="none";startGame();}
+function backToMenu(){gameOverOverlay.style.display="none";overlay.style.display="flex";}
+function quitGame(){location.reload();}
+
+function openShop(){overlay.style.display="none"; shopOverlay.style.display="flex";}
+function closeShop(){shopOverlay.style.display="none"; overlay.style.display="flex";}
 
 function buyJet(jet,price){
   if(coins>=price){
-    coins-=price; localStorage.setItem("coins",coins);
-    selectedJet=jet; localStorage.setItem("jet",jet);
+    coins-=price;
+    localStorage.setItem("coins",coins);
+    selectedJet=jet;
+    localStorage.setItem("jet",jet);
     alert("Congrats! You bought "+jet+" jet!");
-    coinDisplay.innerText=coins; closeShop();
-  }else{ alert("Not enough coins! Keep shooting zombies to earn more! 💰"); }
+    coinDisplay.innerText=coins;
+    closeShop();
+  }else{
+    alert("Not enough coins! Keep shooting zombies to earn more! 💰");
+  }
 }
 </script>
 
