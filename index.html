@@ -7,27 +7,32 @@
 <style>
 body{margin:0;background:#000;color:#fff;font-family:sans-serif;overflow:hidden}
 
-/* TOP LINE BAR */
-#topbar{
+/* CENTER MENU */
+#menu{
 position:absolute;
-top:0;left:0;right:0;
+inset:0;
 display:flex;
+flex-direction:column;
 justify-content:center;
-gap:50px;
-padding:12px;
-background:#000;
-border-bottom:2px solid #333;
+align-items:center;
+gap:25px;
 z-index:10
 }
 
-.item{
-padding:8px 20px;
-border-bottom:2px solid #555;
-font-weight:bold;
-cursor:pointer
+.line{
+width:220px;
+text-align:center;
+padding:14px;
+font-size:20px;
+border-bottom:2px solid #444;
+border-top:2px solid #444;
+border-radius:10px
 }
 
-/* DEFEAT PAGE */
+.score{background:linear-gradient(135deg,#00f,#fff)}
+.play{background:linear-gradient(135deg,#0f0,#fff);cursor:pointer}
+.mind{background:linear-gradient(135deg,#ff00aa,#fff)}
+
 #defeat{
 position:absolute;
 inset:0;
@@ -54,10 +59,10 @@ canvas{display:none}
 
 <body>
 
-<div id="topbar">
-<div class="item">🏆 <span id="highUI">0</span></div>
-<div class="item">🧠 <span id="mindUI">0</span></div>
-<div class="item" onclick="startGame()">▶ PLAY</div>
+<div id="menu">
+<div class="line score">🪙 Score: <span id="highUI">0</span></div>
+<div class="line play" onclick="startGame()">▶ PLAY</div>
+<div class="line mind">🧠 Minds: <span id="mindUI">0</span></div>
 </div>
 
 <div id="defeat">
@@ -73,6 +78,9 @@ canvas{display:none}
 <script>
 
 let save=JSON.parse(localStorage.getItem("zb"))||{high:0,minds:0}
+
+highUI.innerText=save.high
+mindUI.innerText=save.minds
 
 let jetImg=new Image()
 jetImg.src="jet.gif"
@@ -92,19 +100,18 @@ let bullets=[],zombies=[],blood=[],poisons=[],drops=[]
 
 let score=0
 let matchMinds=0
-let totalMinds=save.minds
 let health=3
 let doubleFire=false
 
 let running=false
 let spawnTimer,fireTimer
 
-highUI.innerText=save.high
-mindUI.innerText=totalMinds
-
 function startGame(){
+
 if(running) return
 running=true
+
+menu.style.display="none"
 
 score=0
 matchMinds=0
@@ -145,6 +152,7 @@ if(running) x=e.touches[0].clientX
 })
 
 function loop(){
+
 if(!running) return
 
 g.clearRect(0,0,c.width,c.height)
@@ -177,9 +185,8 @@ bullets.splice(bi,1)
 
 score++
 
-if(Math.random()<0.3){
+if(Math.random()<0.3)
 matchMinds++
-}
 }
 })
 
@@ -239,13 +246,8 @@ dMinds.innerText=matchMinds
 defeat.style.display="flex"
 }
 
-function restartGame(){
-location.reload()
-}
-
-function mainMenu(){
-location.reload()
-}
+function restartGame(){location.reload()}
+function mainMenu(){location.reload()}
 
 </script>
 </body>
