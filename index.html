@@ -7,32 +7,46 @@
 <style>
 body{margin:0;background:#000;color:#fff;font-family:sans-serif;overflow:hidden}
 
+/* TOP LINE BAR */
 #topbar{
 position:absolute;
 top:0;left:0;right:0;
 display:flex;
 justify-content:center;
-align-items:center;
-gap:30px;
-padding:10px;
-background:#111;
+gap:50px;
+padding:12px;
+background:#000;
 border-bottom:2px solid #333;
 z-index:10
 }
 
-.box{
-min-width:110px;
-text-align:center;
-padding:10px;
-border-left:2px solid #333;
-border-right:2px solid #333;
-border-radius:8px;
-font-weight:bold
+.item{
+padding:8px 20px;
+border-bottom:2px solid #555;
+font-weight:bold;
+cursor:pointer
 }
 
-.score{background:linear-gradient(135deg,#00f,#fff)}
-.mind{background:linear-gradient(135deg,#ff00aa,#fff)}
-.play{background:linear-gradient(135deg,#0f0,#fff);cursor:pointer}
+/* DEFEAT PAGE */
+#defeat{
+position:absolute;
+inset:0;
+display:none;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+background:rgba(0,0,0,.85);
+z-index:20
+}
+
+.btn{
+margin:10px;
+padding:15px 30px;
+background:#333;
+border-radius:14px;
+font-size:18px;
+cursor:pointer
+}
 
 canvas{display:none}
 </style>
@@ -41,48 +55,61 @@ canvas{display:none}
 <body>
 
 <div id="topbar">
-<div class="box score">🪙 <span id="scoreUI">0</span></div>
-<div class="box mind">🧠 <span id="mindUI">0</span></div>
-<div class="box play" onclick="startGame()">▶ PLAY</div>
+<div class="item">🏆 <span id="highUI">0</span></div>
+<div class="item">🧠 <span id="mindUI">0</span></div>
+<div class="item" onclick="startGame()">▶ PLAY</div>
+</div>
+
+<div id="defeat">
+<h1 style="color:red">Defeat ☠</h1>
+<h3>Score: <span id="dScore">0</span></h3>
+<h3>🧠 Minds: <span id="dMinds">0</span></h3>
+<div class="btn" onclick="restartGame()">🔄 Restart</div>
+<div class="btn" onclick="mainMenu()">🏠 Main Menu</div>
 </div>
 
 <canvas id="game"></canvas>
 
 <script>
 
+let save=JSON.parse(localStorage.getItem("zb"))||{high:0,minds:0}
+
 let jetImg=new Image()
 jetImg.src="jet.gif"
 
 let zombieImgs=[]
 for(let n of ["zombie.png","zombie2.png","zombie3.png"]){
- let img=new Image()
- img.src=n
- zombieImgs.push(img)
+let img=new Image()
+img.src=n
+zombieImgs.push(img)
 }
 
 let c=document.getElementById("game")
 let g=c.getContext("2d")
 
 let x,y
-let bullets=[]
-let zombies=[]
-let blood=[]
-let poisons=[]
-let drops=[]
+let bullets=[],zombies=[],blood=[],poisons=[],drops=[]
 
 let score=0
-let minds=0
+let matchMinds=0
+let totalMinds=save.minds
 let health=3
 let doubleFire=false
 
-let gameRunning=false
-let spawnTimer=null
-let fireTimer=null
+let running=false
+let spawnTimer,fireTimer
+
+highUI.innerText=save.high
+mindUI.innerText=totalMinds
 
 function startGame(){
+if(running) return
+running=true
 
-if(gameRunning) return
-gameRunning=true
+score=0
+matchMinds=0
+health=3
+doubleFire=false
 
 c.style.display="block"
 c.width=innerWidth
@@ -97,48 +124,38 @@ fireTimer=setInterval(autoFire,200)
 loop()
 }
 
-c.addEventListener("touchmove",e=>{
-if(gameRunning)
-x=e.touches[0].clientX
-})
-
 function spawnZombie(){
-
 let types=["green","blue","red"]
-
 zombies.push({
 x:Math.random()*c.width,
 y:-10,
 s:3,
 type:types[Math.floor(Math.random()*3)],
-img:zombieImgs[Math.floor(Math.random()*zombieImgs.length)]
+img:zombieImgs[Math.floor(Math.random()*3)]
 })
 }
 
 function autoFire(){
-
 bullets.push({x:x,y:y})
-
-if(doubleFire)
-bullets.push({x:x+12,y:y})
+if(doubleFire) bullets.push({x:x+12,y:y})
 }
 
-function loop(){
+c.addEventListener("touchmove",e=>{
+if(running) x=e.touches[0].clientX
+})
 
-if(!gameRunning) return
+function loop(){
+if(!running) return
 
 g.clearRect(0,0,c.width,c.height)
-
 g.drawImage(jetImg,x-25,y-25,50,50)
 
-// bullets
 bullets.forEach(b=>{
 b.y-=8
 g.fillStyle="yellow"
 g.fillRect(b.x,b.y,4,8)
 })
 
-// zombies
 zombies.forEach((z,zi)=>{
 z.y+=z.s
 g.drawImage(z.img,z.x,z.y,40,40)
@@ -159,11 +176,9 @@ zombies.splice(zi,1)
 bullets.splice(bi,1)
 
 score++
-scoreUI.innerText=score
 
 if(Math.random()<0.3){
-minds++
-mindUI.innerText=minds
+matchMinds++
 }
 }
 })
@@ -172,7 +187,6 @@ if(Math.abs(z.x-x)<25 && Math.abs(z.y-y)<25)
 endGame()
 })
 
-// blood
 blood.forEach((p,pi)=>{
 p.y+=p.vy
 g.fillStyle="blue"
@@ -180,29 +194,20 @@ g.fillRect(p.x,p.y,3,3)
 if(p.y>c.height) blood.splice(pi,1)
 })
 
-// poison
 poisons.forEach((p,pi)=>{
 p.y+=5
-
-if(p.type=="green") g.fillStyle="green"
-if(p.type=="blue") g.fillStyle="cyan"
-if(p.type=="red") g.fillStyle="red"
-
+g.fillStyle=p.type=="green"?"green":p.type=="blue"?"cyan":"red"
 g.fillRect(p.x,p.y,6,10)
 
 if(Math.abs(p.x-x)<20 && Math.abs(p.y-y)<20){
-
-if(p.type=="green") health-=1
+if(p.type=="green") health--
 if(p.type=="blue") health-=2
 if(p.type=="red") health=0
-
 poisons.splice(pi,1)
-
 if(health<=0) endGame()
 }
 })
 
-// drops
 drops.forEach((d,di)=>{
 g.fillStyle="blue"
 g.fillRect(d.x,d.y,14,14)
@@ -221,12 +226,24 @@ requestAnimationFrame(loop)
 
 function endGame(){
 
-gameRunning=false
-
+running=false
 clearInterval(spawnTimer)
 clearInterval(fireTimer)
 
-alert("GAME OVER")
+save.high=Math.max(save.high,score)
+save.minds+=matchMinds
+localStorage.setItem("zb",JSON.stringify(save))
+
+dScore.innerText=score
+dMinds.innerText=matchMinds
+defeat.style.display="flex"
+}
+
+function restartGame(){
+location.reload()
+}
+
+function mainMenu(){
 location.reload()
 }
 
