@@ -7,7 +7,6 @@
 <style>
 body{margin:0;background:#000;color:#fff;font-family:sans-serif;overflow:hidden}
 
-/* CENTER MENU */
 #menu{
 position:absolute;
 inset:0;
@@ -54,6 +53,31 @@ cursor:pointer
 }
 
 canvas{display:none}
+
+/* GAME UI */
+#uiScore{
+position:absolute;
+top:10px;
+left:10px;
+font-size:18px;
+display:none
+}
+
+#healthBar{
+position:absolute;
+top:10px;
+right:10px;
+width:120px;
+height:14px;
+background:#333;
+display:none
+}
+
+#healthFill{
+height:100%;
+background:red;
+width:100%
+}
 </style>
 </head>
 
@@ -65,12 +89,15 @@ canvas{display:none}
 <div class="line mind">🧠 Minds: <span id="mindUI">0</span></div>
 </div>
 
+<div id="uiScore">Score: 0</div>
+<div id="healthBar"><div id="healthFill"></div></div>
+
 <div id="defeat">
 <h1 style="color:red">Defeat ☠</h1>
 <h3>Score: <span id="dScore">0</span></h3>
 <h3>🧠 Minds: <span id="dMinds">0</span></h3>
-<div class="btn" onclick="restartGame()">🔄 Restart</div>
-<div class="btn" onclick="mainMenu()">🏠 Main Menu</div>
+<div class="btn" onclick="location.reload()">🔄 Restart</div>
+<div class="btn" onclick="location.reload()">🏠 Main Menu</div>
 </div>
 
 <canvas id="game"></canvas>
@@ -78,7 +105,6 @@ canvas{display:none}
 <script>
 
 let save=JSON.parse(localStorage.getItem("zb"))||{high:0,minds:0}
-
 highUI.innerText=save.high
 mindUI.innerText=save.minds
 
@@ -96,22 +122,23 @@ let c=document.getElementById("game")
 let g=c.getContext("2d")
 
 let x,y
-let bullets=[],zombies=[],blood=[],poisons=[],drops=[]
+let bullets=[],zombies=[],blood=[],poisons=[],drops=[],mindDrops=[]
 
 let score=0
 let matchMinds=0
 let health=3
 let doubleFire=false
-
 let running=false
 let spawnTimer,fireTimer
 
 function startGame(){
 
-if(running) return
+if(running)return
 running=true
 
 menu.style.display="none"
+uiScore.style.display="block"
+healthBar.style.display="block"
 
 score=0
 matchMinds=0
@@ -144,19 +171,22 @@ img:zombieImgs[Math.floor(Math.random()*3)]
 
 function autoFire(){
 bullets.push({x:x,y:y})
-if(doubleFire) bullets.push({x:x+12,y:y})
+if(doubleFire)bullets.push({x:x+12,y:y})
 }
 
 c.addEventListener("touchmove",e=>{
-if(running) x=e.touches[0].clientX
+if(running)x=e.touches[0].clientX
 })
 
 function loop(){
 
-if(!running) return
+if(!running)return
 
 g.clearRect(0,0,c.width,c.height)
 g.drawImage(jetImg,x-25,y-25,50,50)
+
+uiScore.innerText="Score: "+score
+healthFill.style.width=(health/3*100)+"%"
 
 bullets.forEach(b=>{
 b.y-=8
@@ -172,10 +202,13 @@ if(Math.random()<0.01)
 poisons.push({x:z.x+20,y:z.y+20,type:z.type})
 
 bullets.forEach((b,bi)=>{
-if(Math.abs(b.x-z.x)<20 && Math.abs(b.y-z.y)<20){
+if(Math.abs(b.x-z.x)<20&&Math.abs(b.y-z.y)<20){
 
 for(let i=0;i<6;i++)
 blood.push({x:z.x+20,y:z.y+20,vy:Math.random()*3})
+
+if(Math.random()<0.3)
+mindDrops.push({x:z.x,y:z.y})
 
 if(Math.random()<0.25)
 drops.push({x:z.x,y:z.y})
@@ -184,13 +217,10 @@ zombies.splice(zi,1)
 bullets.splice(bi,1)
 
 score++
-
-if(Math.random()<0.3)
-matchMinds++
 }
 })
 
-if(Math.abs(z.x-x)<25 && Math.abs(z.y-y)<25)
+if(Math.abs(z.x-x)<25&&Math.abs(z.y-y)<25)
 endGame()
 })
 
@@ -198,7 +228,7 @@ blood.forEach((p,pi)=>{
 p.y+=p.vy
 g.fillStyle="blue"
 g.fillRect(p.x,p.y,3,3)
-if(p.y>c.height) blood.splice(pi,1)
+if(p.y>c.height)blood.splice(pi,1)
 })
 
 poisons.forEach((p,pi)=>{
@@ -206,12 +236,12 @@ p.y+=5
 g.fillStyle=p.type=="green"?"green":p.type=="blue"?"cyan":"red"
 g.fillRect(p.x,p.y,6,10)
 
-if(Math.abs(p.x-x)<20 && Math.abs(p.y-y)<20){
-if(p.type=="green") health--
-if(p.type=="blue") health-=2
-if(p.type=="red") health=0
+if(Math.abs(p.x-x)<20&&Math.abs(p.y-y)<20){
+if(p.type=="green")health--
+if(p.type=="blue")health-=2
+if(p.type=="red")health=0
 poisons.splice(pi,1)
-if(health<=0) endGame()
+if(health<=0)endGame()
 }
 })
 
@@ -222,9 +252,20 @@ g.fillStyle="white"
 g.fillText("+",d.x+3,d.y+11)
 d.y+=2
 
-if(Math.abs(d.x-x)<25 && Math.abs(d.y-y)<25){
+if(Math.abs(d.x-x)<25&&Math.abs(d.y-y)<25){
 doubleFire=true
 drops.splice(di,1)
+}
+})
+
+mindDrops.forEach((m,mi)=>{
+g.fillStyle="purple"
+g.fillRect(m.x,m.y,12,12)
+m.y+=2
+
+if(Math.abs(m.x-x)<25&&Math.abs(m.y-y)<25){
+matchMinds++
+mindDrops.splice(mi,1)
 }
 })
 
@@ -245,9 +286,6 @@ dScore.innerText=score
 dMinds.innerText=matchMinds
 defeat.style.display="flex"
 }
-
-function restartGame(){location.reload()}
-function mainMenu(){location.reload()}
 
 </script>
 </body>
